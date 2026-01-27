@@ -18,6 +18,52 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 - Python 3.6 或更高版本
 - `requests` 库（用于下载图片）
 
+## 卸载方法
+
+### 使用卸载脚本
+
+项目提供了自动化卸载脚本，可完全移除技能文件和依赖：
+
+```bash
+cd /path/to/markdown-organizer
+bash scripts/uninstall.sh
+```
+
+### 手动卸载
+
+如果您需要手动卸载，可以执行以下步骤：
+
+1. **删除技能命令文件**
+   ```bash
+   rm -f ~/.claude/commands/markdown-organizer.md
+   ```
+
+2. **删除技能目录**
+   ```bash
+   rm -rf ~/.claude/skills/markdown-organizer
+   ```
+
+3. **卸载依赖库**
+   ```bash
+   pip uninstall -y requests
+   ```
+
+### 验证卸载
+
+执行以下命令验证卸载是否成功：
+```bash
+# 检查技能命令文件是否存在
+ls ~/.claude/commands/ | grep markdown-organizer
+
+# 检查技能目录是否存在
+ls ~/.claude/skills/ | grep markdown-organizer
+
+# 检查 requests 库是否已卸载
+pip list | grep requests
+```
+
+如果所有命令都没有输出，说明卸载完成。
+
 ### 安装步骤
 
 1. **克隆或下载技能**
