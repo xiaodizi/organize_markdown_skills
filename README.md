@@ -13,7 +13,26 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 
 ## 安装方法
 
-### 前置要求
+### 通过 Marketplace 安装（推荐）
+
+#### 1. 添加市场源
+```bash
+/plugin marketplace add xiaodizi/organize_markdown_skills
+```
+
+#### 2. 安装插件
+```bash
+/plugin install markdown-organizer@markdown-organizer
+```
+
+#### 3. 安装 Python 依赖
+```bash
+pip install requests
+```
+
+### 手动安装
+
+#### 前置要求
 
 - Python 3.6 或更高版本
 - `requests` 库（用于下载图片）
