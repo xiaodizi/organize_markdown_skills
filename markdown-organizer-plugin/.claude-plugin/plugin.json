@@ -7,8 +7,5 @@
   },
   "keywords": ["markdown", "organize", "images", "beautify"],
   "homepage": "https://github.com/xiaodizi/organize_markdown_skills",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/xiaodizi/organize_markdown_skills.git"
-  }
+  "repository": "https://github.com/xiaodizi/organize_markdown_skills.git"
 }
