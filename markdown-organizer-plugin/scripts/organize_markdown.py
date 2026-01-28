@@ -94,6 +94,69 @@ def extract_and_download_images(content: str, base_url: str, img_dir: Path) -> s
     return updated_content
 
 
+def resolve_file_path(file_path: str | Path) -> Path:
+    """
+    解析文件路径，支持相对路径
+
+    如果文件不存在，尝试在当前目录和常见位置查找
+    """
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    # 如果是绝对路径，直接返回
+    if file_path.is_absolute():
+        if file_path.exists():
+            return file_path
+        raise FileNotFoundError(f"文件不存在: {file_path}")
+
+    # 相对路径，尝试在不同位置查找
+    search_paths = [
+        Path.cwd(),  # 当前工作目录
+        Path.home(),  # 用户主目录
+    ]
+
+    # 从环境变量获取可能的路径
+    if 'CLAUDE_WORKING_DIR' in os.environ:
+        search_paths.insert(0, Path(os.environ['CLAUDE_WORKING_DIR']))
+
+    # 尝试在当前目录和父目录查找
+    for base_path in search_paths:
+        full_path = base_path / file_path
+        if full_path.exists():
+            return full_path.resolve()
+
+    # 尝试递归搜索（最多3层深度）
+    for base_path in search_paths:
+        for root, dirs, files in os.walk(base_path):
+            # 限制搜索深度
+            level = root.replace(str(base_path), '').count(os.sep)
+            if level >= 3:
+                dirs[:] = []  # 不再深入
+                continue
+
+            if file_path.name in files:
+                return Path(root) / file_path.name
+
+    # 列出所有找到的 .md 文件供参考
+    md_files = []
+    for base_path in search_paths:
+        for root, dirs, files in os.walk(base_path):
+            level = root.replace(str(base_path), '').count(os.sep)
+            if level >= 2:
+                dirs[:] = []
+                continue
+            for f in files:
+                if f.endswith('.md'):
+                    md_files.append(str(Path(root) / f))
+
+    error_msg = f"无法找到文件: {file_path}\n搜索路径: {[str(p) for p in search_paths]}\n"
+    if md_files:
+        error_msg += f"\n找到的 Markdown 文件:\n" + "\n".join(md_files[:10])
+    error_msg += f"\n\n请提供绝对路径或确保文件在当前工作目录中"
+
+    raise FileNotFoundError(error_msg)
+
+
 def beautify_markdown(content: str) -> str:
     """美化 markdown 格式"""
     # 1. 标题层级规范化
@@ -184,7 +247,14 @@ def main():
     file_path = sys.argv[1]
     base_url = sys.argv[2] if len(sys.argv) > 2 else ''
 
-    organize_markdown(file_path, base_url)
+    # 解析文件路径
+    try:
+        resolved_path = resolve_file_path(file_path)
+    except FileNotFoundError as e:
+        print(f"❌ 错误: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    organize_markdown(resolved_path, base_url)
 
 
 if __name__ == '__main__':
