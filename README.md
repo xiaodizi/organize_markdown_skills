@@ -15,6 +15,8 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 
 ### 通过 Marketplace 安装（推荐）
 
+安装插件会自动安装所需的 Python 依赖。
+
 #### 1. 添加市场源
 ```bash
 /plugin marketplace add xiaodizi/organize_markdown_skills
@@ -25,10 +27,7 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 /plugin install markdown-organizer@markdown-organizer
 ```
 
-#### 3. 安装 Python 依赖
-```bash
-pip install requests
-```
+插件安装时会自动运行 `pip install requests`，无需手动操作。
 
 ### 手动安装
 
@@ -39,30 +38,32 @@ pip install requests
 
 ## 卸载方法
 
-### 使用卸载脚本
-
-项目提供了自动化卸载脚本，可完全移除技能文件和依赖：
+### 使用 Claude Code 卸载命令（推荐）
 
 ```bash
-cd /path/to/markdown-organizer
-bash scripts/uninstall.sh
+/plugin uninstall markdown-organizer@markdown-organizer
 ```
 
 ### 手动卸载
 
 如果您需要手动卸载，可以执行以下步骤：
 
-1. **删除技能命令文件**
+1. **使用 Claude Code 卸载插件**
+   ```bash
+   /plugin uninstall markdown-organizer@markdown-organizer
+   ```
+
+2. **删除技能命令文件**
    ```bash
    rm -f ~/.claude/commands/markdown-organizer.md
    ```
 
-2. **删除技能目录**
+3. **删除技能目录**
    ```bash
    rm -rf ~/.claude/skills/markdown-organizer
    ```
 
-3. **卸载依赖库**
+4. **卸载依赖库**（可选）
    ```bash
    pip uninstall -y requests
    ```
@@ -77,33 +78,11 @@ ls ~/.claude/commands/ | grep markdown-organizer
 # 检查技能目录是否存在
 ls ~/.claude/skills/ | grep markdown-organizer
 
-# 检查 requests 库是否已卸载
-pip list | grep requests
+# 检查插件是否已卸载
+/plugin list | grep markdown-organizer
 ```
 
 如果所有命令都没有输出，说明卸载完成。
-
-### 安装步骤
-
-1. **克隆或下载技能**
-
-   确保您已经获取了 Markdown Organizer 技能文件。
-
-2. **安装依赖库**
-
-   在技能目录下运行以下命令安装所需依赖：
-
-   ```bash
-   pip install requests
-   ```
-
-3. **验证安装**
-
-   检查脚本是否可正常执行：
-
-   ```bash
-   python3 markdown-organizer/scripts/organize_markdown.py --help
-   ```
 
 ## 使用方法
 
