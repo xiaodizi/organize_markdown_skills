@@ -11,6 +11,31 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 - **格式美化**：优化 Markdown 格式，提升可读性
 - **智能处理**：支持处理相对路径图片，可指定源网页 URL 作为参考
 
+## 项目结构
+
+```
+organize_markdown_skills/
+├── markdown-organizer-plugin/    # Claude Code 插件目录
+│   ├── skills/                   # 技能定义
+│   │   └── markdown-organizer/
+│   │       ├── SKILL.md          # 技能说明文档
+│   │       └── scripts/
+│   │           └── organize_markdown.py  # 处理脚本
+│   ├── commands/                 # 命令快捷方式
+│   │   └── markdown-organizer.md
+│   ├── hooks/                    # 插件钩子
+│   │   ├── hooks.json            # 钩子配置
+│   │   └── install-deps.sh       # 依赖安装脚本
+│   ├── .claude-plugin/           # 插件元数据
+│   │   ├── plugin.json           # 插件配置
+│   │   └── marketplace.json      # Marketplace 配置
+│   └── scripts/                  # 插件根脚本
+│       └── organize_markdown.py
+├── scripts/                      # 项目脚本
+│   └── uninstall.sh              # 卸载脚本
+└── README.md                     # 本文档
+```
+
 ## 安装方法
 
 ### 通过 Marketplace 安装（推荐）
@@ -18,23 +43,36 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 安装插件会自动安装所需的 Python 依赖。
 
 #### 1. 添加市场源
+
 ```bash
 /plugin marketplace add xiaodizi/organize_markdown_skills
 ```
 
 #### 2. 安装插件
+
 ```bash
 /plugin install markdown-organizer@markdown-organizer
 ```
 
-插件安装时会自动运行 `pip install requests`，无需手动操作。
+插件安装时会自动运行 Setup hook 执行依赖安装，无需手动操作。
 
-### 手动安装
+### 验证安装
 
-#### 前置要求
+执行以下命令验证插件是否成功安装：
 
-- Python 3.6 或更高版本
-- `requests` 库（用于下载图片）
+```bash
+# 检查插件列表
+/plugin list
+
+# 检查技能命令
+ls ~/.claude/commands/ | grep markdown-organizer
+
+# 检查技能目录
+ls ~/.claude/skills/ | grep markdown-organizer
+
+# 验证 Python 依赖
+pip show requests
+```
 
 ## 卸载方法
 
@@ -44,11 +82,18 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 /plugin uninstall markdown-organizer@markdown-organizer
 ```
 
-### 手动卸载
+### 完全清理
 
-如果您需要手动卸载，可以执行以下步骤：
+如果您需要完全清理所有相关文件，可以执行项目提供的卸载脚本：
 
-1. **使用 Claude Code 卸载插件**
+```bash
+cd /path/to/organize_markdown_skills
+bash scripts/uninstall.sh
+```
+
+或手动执行以下步骤：
+
+1. **卸载插件**
    ```bash
    /plugin uninstall markdown-organizer@markdown-organizer
    ```
@@ -71,15 +116,16 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 ### 验证卸载
 
 执行以下命令验证卸载是否成功：
+
 ```bash
-# 检查技能命令文件是否存在
+# 检查插件列表（应无输出）
+/plugin list | grep markdown-organizer
+
+# 检查技能命令（应无输出）
 ls ~/.claude/commands/ | grep markdown-organizer
 
-# 检查技能目录是否存在
+# 检查技能目录（应无输出）
 ls ~/.claude/skills/ | grep markdown-organizer
-
-# 检查插件是否已卸载
-/plugin list | grep markdown-organizer
 ```
 
 如果所有命令都没有输出，说明卸载完成。
@@ -130,7 +176,7 @@ ls ~/.claude/skills/ | grep markdown-organizer
 您也可以直接运行 Python 脚本来处理文件：
 
 ```bash
-cd /path/to/markdown-organizer
+cd /path/to/markdown-organizer-plugin
 python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-url]
 ```
 
@@ -140,7 +186,7 @@ python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-ur
 
 ### 处理过程
 
-执行技能后，会自动完成以下操作：
+执行技能后，会自动完成以下以下操作：
 
 1. 在 Markdown 文件所在目录创建 `img` 文件夹（如不存在）
 2. 下载所有图片到 `img` 文件夹（使用 MD5 哈希命名避免冲突）
@@ -203,33 +249,54 @@ python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-ur
    - 如果是相对路径图片，尝试提供原网页 URL
 
 3. **依赖库未安装**
+   - 检查 `pip show requests` 是否已安装
    - 重新运行 `pip install requests`
+
+4. **插件未找到**
+   - 检查 Marketplace 源是否已添加
+   - 尝试重新安装插件
 
 ## 技术细节
 
-### 脚本位置
+### 核心脚本
 
+主处理脚本位置：
 ```
-markdown-organizer/scripts/organize_markdown.py
+markdown-organizer-plugin/skills/markdown-organizer/scripts/organize_markdown.py
 ```
 
 ### 技能配置
 
-技能配置文件位于：
+技能定义文件：
 ```
-markdown-organizer/SKILL.md
+markdown-organizer-plugin/skills/markdown-organizer/SKILL.md
 ```
 
-### 插件集成
+### 插件配置
 
-如果使用 Claude Code 插件，配置文件位于：
+插件元数据文件：
 ```
-markdown-organizer-plugin/.claude-plugin/
+markdown-organizer-plugin/.claude-plugin/plugin.json
+markdown-organizer-plugin/.claude-plugin/marketplace.json
+```
+
+### 钩子配置
+
+自动安装依赖的钩子配置：
+```
+markdown-organizer-plugin/hooks/hooks.json
+markdown-organizer-plugin/hooks/install-deps.sh
 ```
 
 ## 反馈与支持
 
 如有问题或建议，请通过以下方式反馈：
+
 1. 查看脚本输出的错误信息
 2. 检查文件权限和路径
 3. 确保网络连接正常
+4. 提交 Issue 到项目仓库
+
+## 许可证
+
+MIT License
