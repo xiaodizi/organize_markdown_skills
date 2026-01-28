@@ -1,0 +1,16 @@
+{
+  "description": "Setup hook to automatically install Python dependencies",
+  "hooks": {
+    "Setup": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/install-deps.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
