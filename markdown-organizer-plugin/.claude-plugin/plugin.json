@@ -10,7 +10,7 @@
   "repository": "https://github.com/xiaodizi/organize_markdown_skills.git",
   "skills": [
     {
-      "name": "process_markdown", 
+      "name": "markdown-organizer", 
       "description": "读取Markdown文件，美化格式并将远程图片下载到本地",
       "input_schema": {
         "type": "object",
