@@ -7,21 +7,5 @@
   },
   "keywords": ["markdown", "organize", "images", "beautify"],
   "homepage": "https://github.com/xiaodizi/organize_markdown_skills",
-  "repository": "https://github.com/xiaodizi/organize_markdown_skills.git",
-  "skills": [
-    {
-      "name": "process_markdown", 
-      "description": "读取Markdown文件，美化格式并将远程图片下载到本地",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "file_path": {
-            "type": "string",
-            "description": "需要处理的 Markdown 文件的绝对路径"
-          }
-        },
-        "required": ["file_path"]
-      }
-    }
-  ]
+  "repository": "https://github.com/xiaodizi/organize_markdown_skills.git"
 }
