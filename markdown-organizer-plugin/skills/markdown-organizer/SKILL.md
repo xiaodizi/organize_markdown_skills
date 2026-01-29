@@ -20,11 +20,13 @@ description: Markdown 文档组织和美化工具。用于处理从网页复制�
 
 ### 2. 执行脚本
 
-运行 `{plugin_dir}/scripts/organize_markdown.py` 处理文件，使用绝对路径确保正确执行：
+运行 `{skill_dir}/organize_markdown.py` 处理文件，使用绝对路径确保正确执行：
 
 ```bash
-python3 {plugin_dir}/scripts/organize_markdown.py /path/to/file.md [base_url]
+python3 {skill_dir}/organize_markdown.py /path/to/file.md [base_url]
 ```
+
+其中 `{skill_dir}` 是技能目录的绝对路径（SKILL.md 所在目录）。
 
 其中 `{plugin_dir}` 是插件目录的绝对路径。
 
@@ -58,7 +60,7 @@ python3 {plugin_dir}/scripts/organize_markdown.py /path/to/file.md [base_url]
 ## 脚本位置
 
 ```
-scripts/organize_markdown.py
+organize_markdown.py
 ```
 
 ## 使用示例
@@ -72,7 +74,7 @@ scripts/organize_markdown.py
 
 执行：
 ```bash
-python3 scripts/organize_markdown.py /Users/user/articles/python-tutorial.md
+python3 organize_markdown.py /Users/user/articles/python-tutorial.md
 ```
 
 ### 示例 2：指定源 URL
@@ -84,7 +86,7 @@ python3 scripts/organize_markdown.py /Users/user/articles/python-tutorial.md
 
 执行：
 ```bash
-python3 scripts/organize_markdown.py article.md https://example.com/post/123
+python3 organize_markdown.py article.md https://example.com/post/123
 ```
 
 ## 依赖
