@@ -20,18 +20,13 @@ description: Markdown 文档组织和美化工具。用于处理从网页复制�
 
 ### 2. 执行脚本
 
-运行 `{skill_dir}/scripts/organize_markdown.py` 处理文件，使用绝对路径确保正确执行：
+运行 `{plugin_dir}/scripts/organize_markdown.py` 处理文件，使用绝对路径确保正确执行：
 
-```bash
-python3 {skill_dir}/scripts/organize_markdown.py /path/to/file.md [base_url]
-```
-
-其中 `{skill_dir}` 是技能目录的绝对路径（通常在插件目录的 skills/ 子目录下）。
-
-或者如果脚本在插件根目录的 scripts 文件夹：
 ```bash
 python3 {plugin_dir}/scripts/organize_markdown.py /path/to/file.md [base_url]
 ```
+
+其中 `{plugin_dir}` 是插件目录的绝对路径。
 
 **参数说明：**
 - `file.md`: markdown 文件路径（必需）
