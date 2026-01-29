@@ -11,12 +11,12 @@ description: 组织和美化 markdown 文档，下载图片到本地 img 文件�
 
 ### 基本使用
 ```
-/markdown-organizer @/path/to/your/document.md
+/markdown-organizer @articles.md
 ```
 
 ### 指定源 URL（处理相对路径图片）
 ```
-/markdown-organizer @/path/to/your/document.md https://example.com/post/123
+/markdown-organizer @articles.md https://example.com/post/123
 ```
 
 ## 执行步骤
