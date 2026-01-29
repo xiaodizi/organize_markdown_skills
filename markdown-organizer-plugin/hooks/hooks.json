@@ -1,16 +1,1 @@
-{
-  "description": "Setup hook to automatically install Python dependencies",
-  "hooks": {
-    "Setup": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/install-deps.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
+{"description": "Setup and cleanup hooks for markdown-organizer plugin", "hooks": {"Setup": [{"matcher": "*", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/install-deps.sh"}]}], "Cleanup": [{"matcher": "*", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/uninstall.sh"}]}]}}
