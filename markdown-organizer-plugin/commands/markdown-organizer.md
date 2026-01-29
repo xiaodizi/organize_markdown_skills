@@ -22,5 +22,10 @@ description: 组织和美化 markdown 文档，下载图片到本地 img 文件�
 ## 执行步骤
 
 1. 解析用户输入，获取 markdown 文件路径（@后跟着的文件路径）和可选的 base_url
-2. 获取插件目录路径，执行脚本：`{plugin_dir}/scripts/organize_markdown.py {file_path} [base_url]`
-3. 确保在正确的目录下执行，图片会保存到 markdown 文件同目录的 img 文件夹
+2. 获取插件目录路径 `{plugin_dir}`
+3. 执行脚本：`python3 {plugin_dir}/scripts/organize_markdown.py {file_path} [base_url]`
+4. 确保在正确的目录下执行，图片会保存到 markdown 文件同目录的 img 文件夹
+
+**重要：**
+- 使用 `python3` 命令直接运行脚本，**不要**使用 `-m` 模块方式
+- 脚本是独立脚本，不是 Python 模块
