@@ -23,7 +23,7 @@ description: 组织和美化 markdown 文档，下载图片到本地 img 文件�
 
 1. 解析用户输入，获取 markdown 文件路径（@后跟着的文件路径）和可选的 base_url
 2. 获取技能目录路径 `{skill_dir}`
-3. 执行脚本：`python3 {skill_dir}/organize_markdown.py {file_path} [base_url]`
+3. 执行脚本：`python3 {skill_dir}/scripts/organize_markdown.py {file_path} [base_url]`
 4. 确保在正确的目录下执行，图片会保存到 markdown 文件同目录的 img 文件夹
 
 **重要：**
