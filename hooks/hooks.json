@@ -1,0 +1,17 @@
+{
+  "description": "Hooks for markdown-organizer plugin",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-deps.sh"
+          }
+        ],
+        "description": "Check and install Python dependencies (requests) on session start"
+      }
+    ]
+  }
+}
