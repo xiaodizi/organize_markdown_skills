@@ -1,6 +1,4 @@
 {
-  "manifest_version": "1.0.0",
-  "spec_version": "1.0.0",
   "name": "markdown-organizer",
   "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹",
   "version": "1.0.0",
