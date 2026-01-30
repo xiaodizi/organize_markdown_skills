@@ -1,6 +1,6 @@
 ---
 name: markdown-organizer
-description: 组织和美化 Markdown 文档，自动下载图片到本地。用于处理从网页复制的 markdown 文件：当用户说"帮我美化文档"、"处理这个 markdown 文件"或使用 @ 文件路径时触发。
+description: 组织和美化 Markdown 文档，自动下载图片到本地。用于处理从网页复制的 markdown 文件。
 disable-model-invocation: true
 allowed-tools: Bash(python3 *)
 ---
@@ -17,20 +17,22 @@ allowed-tools: Bash(python3 *)
 /markdown-organizer @<文件路径>
 ```
 
-或自然语言触发：
-- "@文件路径 帮我美化文档"
-- "处理这个 markdown 文件"
-- "下载图片并美化格式"
+### 脚本路径
 
-### 运行命令
-
+**请使用以下命令查找脚本位置**：
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py <文件路径> [base_url]
+ls -la ~/.claude/plugins/cache/markdown-organizer/markdown-organizer/*/scripts/organize_markdown.py
 ```
 
-其中 `${CLAUDE_PLUGIN_ROOT}` 在插件安装后指向 `~/.claude/plugins/cache/markdown-organizer/markdown-organizer/<commit>/`
+**运行格式**：
+```bash
+python3 ~/.claude/plugins/cache/markdown-organizer/markdown-organizer/<commit>/scripts/organize_markdown.py <文件路径> [base_url]
+```
 
-**参数说明：**
+其中 `<commit>` 是安装时的 git commit 哈希值（如 `599dee49cc81`）。
+
+### 参数说明
+
 - `<文件路径>`: Markdown 文件路径（必需）
 - `[base_url]`: 原文章页面的 URL（可选，用于解析相对路径的图片）
 
@@ -38,10 +40,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py <文件路径> [base_
 
 ```bash
 # 基本使用
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py article.md
+python3 ~/.claude/plugins/cache/markdown-organizer/markdown-organizer/599dee49cc81/scripts/organize_markdown.py article.md
 
 # 带源 URL（处理相对路径图片）
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py article.md https://example.com/post/123
+python3 ~/.claude/plugins/cache/markdown-organizer/markdown-organizer/599dee49cc81/scripts/organize_markdown.py article.md https://example.com/post/123
 ```
 
 ## 功能说明
@@ -57,7 +59,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py article.md https://ex
 
 ## 依赖
 
-需要安装 Python 库：
 ```bash
 pip install requests
 ```
