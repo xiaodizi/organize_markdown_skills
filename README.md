@@ -25,22 +25,16 @@ organize_markdown_skills/
 │   │   └── markdown-organizer.md
 │   ├── hooks/                    # 插件钩子
 │   │   ├── hooks.json            # 钩子配置
-│   │   └── install-deps.sh       # 依赖安装脚本
-│   ├── .claude-plugin/           # 插件元数据
-│   │   ├── plugin.json           # 插件配置
-│   │   └── marketplace.json      # Marketplace 配置
-│   └── scripts/                  # 插件根脚本
-│       └── organize_markdown.py
-├── scripts/                      # 项目脚本
-│   └── uninstall.sh              # 卸载脚本
+│   │   └── check-deps.sh         # 依赖检查脚本
+│   └── .claude-plugin/           # 插件元数据
+│       ├── plugin.json           # 插件配置
+│       └── marketplace.json      # Marketplace 配置
 └── README.md                     # 本文档
 ```
 
 ## 安装方法
 
 ### 通过 Marketplace 安装（推荐）
-
-安装插件会自动安装所需的 Python 依赖。
 
 #### 1. 添加市场源
 
@@ -54,7 +48,15 @@ organize_markdown_skills/
 /plugin install markdown-organizer@markdown-organizer
 ```
 
-插件安装时会自动运行 Setup hook 执行依赖安装，无需手动操作。
+### 手动安装 Python 依赖
+
+插件安装后，需要在系统上安装 `requests` 库：
+
+```bash
+pip install requests
+```
+
+**注意**：插件会在每次会话开始时检查依赖是否已安装，如果未安装会提示您。
 
 ### 验证安装
 
@@ -63,12 +65,6 @@ organize_markdown_skills/
 ```bash
 # 检查插件列表
 /plugin list
-
-# 检查技能命令
-ls ~/.claude/commands/ | grep markdown-organizer
-
-# 检查技能目录
-ls ~/.claude/skills/ | grep markdown-organizer
 
 # 验证 Python 依赖
 pip show requests
@@ -84,31 +80,12 @@ pip show requests
 
 ### 完全清理
 
-如果您需要完全清理所有相关文件，可以执行项目提供的卸载脚本：
-
-```bash
-cd /path/to/organize_markdown_skills
-bash scripts/uninstall.sh
-```
-
-或手动执行以下步骤：
-
 1. **卸载插件**
    ```bash
    /plugin uninstall markdown-organizer@markdown-organizer
    ```
 
-2. **删除技能命令文件**
-   ```bash
-   rm -f ~/.claude/commands/markdown-organizer.md
-   ```
-
-3. **删除技能目录**
-   ```bash
-   rm -rf ~/.claude/skills/markdown-organizer
-   ```
-
-4. **卸载依赖库**（可选）
+2. **卸载依赖库**（可选）
    ```bash
    pip uninstall -y requests
    ```
@@ -120,15 +97,9 @@ bash scripts/uninstall.sh
 ```bash
 # 检查插件列表（应无输出）
 /plugin list | grep markdown-organizer
-
-# 检查技能命令（应无输出）
-ls ~/.claude/commands/ | grep markdown-organizer
-
-# 检查技能目录（应无输出）
-ls ~/.claude/skills/ | grep markdown-organizer
 ```
 
-如果所有命令都没有输出，说明卸载完成。
+如果命令没有输出，说明卸载完成。
 
 ## 使用方法
 
@@ -177,7 +148,7 @@ ls ~/.claude/skills/ | grep markdown-organizer
 
 ```bash
 cd /path/to/markdown-organizer-plugin
-python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-url]
+python3 skills/markdown-organizer/scripts/organize_markdown.py /path/to/your/document.md [optional-base-url]
 ```
 
 **参数说明**：
@@ -186,7 +157,7 @@ python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-ur
 
 ### 处理过程
 
-执行技能后，会自动完成以下以下操作：
+执行技能后，会自动完成以下操作：
 
 1. 在 Markdown 文件所在目录创建 `img` 文件夹（如不存在）
 2. 下载所有图片到 `img` 文件夹（使用 MD5 哈希命名避免冲突）
@@ -250,7 +221,7 @@ python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-ur
 
 3. **依赖库未安装**
    - 检查 `pip show requests` 是否已安装
-   - 重新运行 `pip install requests`
+   - 运行 `pip install requests`
 
 4. **插件未找到**
    - 检查 Marketplace 源是否已添加
@@ -282,10 +253,10 @@ markdown-organizer-plugin/.claude-plugin/marketplace.json
 
 ### 钩子配置
 
-自动安装依赖的钩子配置：
+检查依赖的钩子配置：
 ```
 markdown-organizer-plugin/hooks/hooks.json
-markdown-organizer-plugin/hooks/install-deps.sh
+markdown-organizer-plugin/hooks/check-deps.sh
 ```
 
 ## 反馈与支持
