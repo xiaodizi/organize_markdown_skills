@@ -15,7 +15,7 @@
         "name": "xiaodizi",
         "url": "https://github.com/xiaodizi"
       },
-      "source": "./markdown-organizer-plugin",
+      "source": "./markdown-organizer",
       "category": "productivity",
       "homepage": "https://github.com/xiaodizi/organize_markdown_skills"
     }
