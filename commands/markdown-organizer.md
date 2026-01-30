@@ -24,9 +24,9 @@ description: 组织和美化 markdown 文档，下载图片到本地 img 文件�
 1. 解析用户输入，获取 markdown 文件路径（@后跟着的文件路径）和可选的 base_url
 2. 执行脚本：`python3 {skill_dir}/scripts/organize_markdown.py {file_path} [base_url]`
 
-其中 `{skill_dir}` 在运行时会被替换为插件安装路径，如：
-- macOS: `~/.claude/plugins/cache/markdown-organizer/markdown-organizer/<commit>/`
-- Windows: `%USERPROFILE%\.claude\plugins\cache\markdown-organizer\markdown-organizer\<commit>\`
+其中 `{skill_dir}` 在运行时会被替换为插件安装路径：
+- macOS: `~/.claude/plugins/cache/markdown-organizer/organize_markdown/1.0.0/`
+- Windows: `%USERPROFILE%\.claude\plugins\cache\markdown-organizer\organize_markdown\1.0.0\`
 
 **重要：**
 - 使用 `python3` 命令直接运行脚本，**不要**使用 `-m` 模块方式
