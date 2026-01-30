@@ -2,3 +2,5 @@
 .idea/
 .DS_Store
 .git
+PLUGIN_INSTALL_BRANCH.md
+AGENTS.md
