@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "markdown-organizer",
-      "path": "./markdown-organizer"
+      "source": "./markdown-organizer"
     }
   ]
 }
