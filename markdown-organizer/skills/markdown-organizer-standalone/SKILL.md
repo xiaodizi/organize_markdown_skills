@@ -25,8 +25,10 @@ allowed-tools: Bash(python3 *)
 ### 运行命令
 
 ```bash
-python3 ~/.claude/skills/markdown-organizer/scripts/organize_markdown.py <文件路径> [base_url]
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py <文件路径> [base_url]
 ```
+
+其中 `${CLAUDE_PLUGIN_ROOT}` 指向插件缓存目录。
 
 **参数说明：**
 - `<文件路径>`: Markdown 文件路径（必需）
@@ -36,10 +38,10 @@ python3 ~/.claude/skills/markdown-organizer/scripts/organize_markdown.py <文件
 
 ```bash
 # 基本使用
-/python3 ~/.claude/skills/markdown-organizer/scripts/organize_markdown.py article.md
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py article.md
 
 # 带源 URL（处理相对路径图片）
-python3 ~/.claude/skills/markdown-organizer/scripts/organize_markdown.py article.md https://example.com/post/123
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/organize_markdown.py article.md https://example.com/post/123
 ```
 
 ## 功能说明
