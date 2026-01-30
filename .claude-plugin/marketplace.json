@@ -6,8 +6,8 @@
   },
   "plugins": [
     {
-      "name": "markdown-organizer",
-      "source": "./markdown-organizer"
+      "name": "organize_markdown_skills",
+      "source": "./"
     }
   ]
 }
