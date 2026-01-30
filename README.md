@@ -15,12 +15,11 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 
 ```
 organize_markdown_skills/
-├── markdown-organizer-plugin/    # Claude Code 插件目录
-│   ├── skills/                   # 技能定义
-│   │   └── markdown-organizer/
-│   │       ├── SKILL.md          # 技能说明文档
-│   │       └── scripts/
-│   │           └── organize_markdown.py  # 处理脚本
+├── markdown-organizer/           # Claude Code 技能目录
+│   ├── SKILL.md                  # 技能说明文档
+│   ├── scripts/                  # 脚本目录
+│   │   ├── organize_markdown.py  # 格式美化脚本
+│   │   └── enhance_content.py    # 内容增强脚本
 │   ├── commands/                 # 命令快捷方式
 │   │   └── markdown-organizer.md
 │   ├── hooks/                    # 插件钩子
@@ -147,8 +146,8 @@ pip show requests
 您也可以直接运行 Python 脚本来处理文件：
 
 ```bash
-cd /path/to/markdown-organizer-plugin
-python3 skills/markdown-organizer/scripts/organize_markdown.py /path/to/your/document.md [optional-base-url]
+cd /path/to/markdown-organizer
+python3 scripts/organize_markdown.py /path/to/your/document.md [optional-base-url]
 ```
 
 **参数说明**：
@@ -233,30 +232,30 @@ python3 skills/markdown-organizer/scripts/organize_markdown.py /path/to/your/doc
 
 主处理脚本位置：
 ```
-markdown-organizer-plugin/skills/markdown-organizer/scripts/organize_markdown.py
+markdown-organizer/scripts/organize_markdown.py
 ```
 
 ### 技能配置
 
 技能定义文件：
 ```
-markdown-organizer-plugin/skills/markdown-organizer/SKILL.md
+markdown-organizer/SKILL.md
 ```
 
 ### 插件配置
 
 插件元数据文件：
 ```
-markdown-organizer-plugin/.claude-plugin/plugin.json
-markdown-organizer-plugin/.claude-plugin/marketplace.json
+markdown-organizer/.claude-plugin/plugin.json
+markdown-organizer/.claude-plugin/marketplace.json
 ```
 
 ### 钩子配置
 
 检查依赖的钩子配置：
 ```
-markdown-organizer-plugin/hooks/hooks.json
-markdown-organizer-plugin/hooks/check-deps.sh
+markdown-organizer/hooks/hooks.json
+markdown-organizer/hooks/check-deps.sh
 ```
 
 ## 反馈与支持
