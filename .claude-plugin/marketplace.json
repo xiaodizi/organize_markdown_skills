@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "organize_markdown_skills",
+      "name": "organize_markdown",
       "source": "./"
     }
   ]
