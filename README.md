@@ -15,8 +15,10 @@ Markdown Organizer 是一个专门用于处理从网页复制的 Markdown 文档
 
 ```
 organize_markdown_skills/
-├── markdown-organizer/           # Claude Code 技能目录
-│   ├── SKILL.md                  # 技能说明文档
+├── markdown-organizer/           # Claude Code 插件目录
+│   ├── skills/                   # 技能目录
+│   │   └── markdown-organizer/   # 技能子目录
+│   │       └── SKILL.md          # 技能说明文档
 │   ├── scripts/                  # 脚本目录
 │   │   ├── organize_markdown.py  # 格式美化脚本
 │   │   └── enhance_content.py    # 内容增强脚本
@@ -239,7 +241,7 @@ markdown-organizer/scripts/organize_markdown.py
 
 技能定义文件：
 ```
-markdown-organizer/SKILL.md
+markdown-organizer/skills/markdown-organizer/SKILL.md
 ```
 
 ### 插件配置
