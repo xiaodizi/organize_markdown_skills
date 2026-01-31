@@ -46,10 +46,10 @@ Commands 自动执行以下脚本：
 
 ```bash
 # 1. 美化文档（下载图片、格式化）
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
+python3 scripts/organize_markdown.py <文件路径> [base_url]
 
 # 2. 增强内容（添加学习目标、前置知识等）
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
+python3 scripts/enhance_content.py --enhance <文件路径>
 ```
 
 ## 依赖
@@ -62,15 +62,15 @@ pip install requests
 
 ```bash
 # 脚本位置
-ls -la ~/LLM/claude_code/organize_markdown_skills/scripts/
+ls -la scripts/
 
 # 方式1：依次运行两个脚本
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
+python3 scripts/organize_markdown.py <文件路径> [base_url]
+python3 scripts/enhance_content.py --enhance <文件路径>
 
 # 方式2：仅运行美化脚本
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
+python3 scripts/organize_markdown.py <文件路径> [base_url]
 
 # 方式3：仅运行增强脚本
-python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
+python3 scripts/enhance_content.py --enhance <文件路径>
 ```
