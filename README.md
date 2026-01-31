@@ -67,24 +67,24 @@
 
 ```
 organize_markdown_skills/
+├── .claude-plugin/                   # 插件配置（发布时由 GitHub 读取）
+│   ├── plugin.json                   # 插件元数据（名称、版本、命令、技能等）
+│   └── marketplace.json              # 市场配置（发布到插件市场）
 ├── commands/                         # 命令快捷方式
 │   └── markdown-organizer.md         # /markdown-organizer 命令定义
 ├── hooks/                            # 插件钩子
 │   ├── hooks.json                    # 钩子配置
-│   ├── check-deps.sh                 # 依赖检查
-│   └── check-update.sh               # 更新检查
+│   ├── check-deps.sh                 # 依赖检查（会话启动时自动安装 requests）
+│   └── check-update.sh               # 更新检查（会话启动时检查新版本）
 ├── skills/                           # 技能定义
 │   └── markdown-organizer/
-│       ├── SKILL.md                  # 技能说明
+│       ├── SKILL.md                  # 技能说明（Claude 执行时的指导）
 │       └── scripts/                  # Python 脚本
 │           ├── organize_markdown.py  # 图片下载与格式美化
-│           └── enhance_content.py    # 内容增强（备用）
-├── img/                              # 示例图片
-│   └── f5339aeb70e245d782f288ba17ace4ff.jpg
-└── README.md                         # 项目说明
-```
-
-> **注意**：`.claude-plugin/` 目录中的 `plugin.json` 和 `marketplace.json` 在发布时由 GitHub 自动读取，本地开发时不包含在目录结构中。
+│           └── enhance_content.py    # 内容增强（备用，AI 智能思考替代）
+├── img/                              # 项目资源
+│   └── f5339aeb70e245d782f288ba17ace4ff.jpg  # 插件预览图
+└── README.md                         # 项目说明文档
 ```
 
 ## 🔄 更新机制
