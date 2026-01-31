@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "organize_markdown",
+      "name": "markdown-organizer",
       "source": "./"
     }
   ]
