@@ -25,12 +25,12 @@ description: Markdown 文档组织和美化工具。用于处理从网页复制�
 
 ## 工作原理
 
-此技能通过 Commands 执行脚本。
+此技能通过 Commands 自动执行脚本。
 
 **执行流程**：
 1. 用户触发 `/markdown-organizer @文件路径`
 2. 运行 `organize_markdown.py` 下载图片并美化格式
-3. AI Agent 继续进行内容增强（学习目标、前置知识、FAQ 等）
+3. 运行 `enhance_content.py` 自动添加学习目标、前置知识等内容增强
 
 ## 功能说明
 
@@ -38,31 +38,19 @@ description: Markdown 文档组织和美化工具。用于处理从网页复制�
 2. **下载图片**：提取并下载所有图片到 `img` 文件夹（使用 MD5 哈希命名）
 3. **更新引用**：将图片引用更新为本地路径 `./img/filename.jpg`
 4. **美化格式**：标题空行、列表规范化、删除多余空行等
-5. **内容增强**：AI Agent 读取美化后的文档，添加学习目标、前置知识、FAQ 等
+5. **内容增强**：根据文档实际内容自动生成学习目标、前置知识、FAQ 等
 
 ## 脚本说明
 
-### organize_markdown.py
-自动下载图片和美化格式，由 Commands 自动调用。
-
-### enhance_content.py
-内容增强辅助工具，供 AI Agent 手动调用：
+Commands 自动执行以下脚本：
 
 ```bash
-# 分析文档结构
-python3 enhance_content.py --analyze <文件路径>
+# 1. 美化文档（下载图片、格式化）
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
 
-# 生成增强建议
-python3 enhance_content.py --suggest <文件路径>
-
-# 自动增强内容（添加缺失部分）
-python3 enhance_content.py --enhance <文件路径>
+# 2. 增强内容（添加学习目标、前置知识等）
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
 ```
-
-**功能**：
-- 分析文档结构，识别标题层级、代码块、技术术语
-- 检测缺失的学习目标、前置知识、FAQ 部分
-- 自动添加缺失的内容章节
 
 ## 依赖
 
@@ -73,12 +61,16 @@ pip install requests
 ## 手动运行脚本
 
 ```bash
-# 查找脚本位置
-ls -la ~/.claude/plugins/cache/markdown-organizer/organize_markdown/1.0.0/scripts/
+# 脚本位置
+ls -la ~/LLM/claude_code/organize_markdown_skills/scripts/
 
-# 运行 organize_markdown.py
-python3 .../scripts/organize_markdown.py <文件路径> [base_url]
+# 方式1：依次运行两个脚本
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
 
-# 运行 enhance_content.py
-python3 .../scripts/enhance_content.py --enhance <文件路径>
+# 方式2：仅运行美化脚本
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/organize_markdown.py <文件路径> [base_url]
+
+# 方式3：仅运行增强脚本
+python3 ~/LLM/claude_code/organize_markdown_skills/scripts/enhance_content.py --enhance <文件路径>
 ```
