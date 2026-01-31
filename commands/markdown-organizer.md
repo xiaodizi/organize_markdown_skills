@@ -22,8 +22,8 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 ## 执行步骤
 
 1. 解析用户输入，获取 markdown 文件路径（@后跟着的文件路径）和可选的 base_url
-2. 执行脚本美化文档：`python3 scripts/organize_markdown.py {file_path} [base_url]`
-3. 执行脚本增强内容：`python3 scripts/enhance_content.py --enhance {file_path}`
+2. 执行脚本美化文档：`python3 skills/markdown-organizer/scripts/organize_markdown.py {file_path} [base_url]`
+3. 执行脚本增强内容：`python3 skills/markdown-organizer/scripts/enhance_content.py --enhance {file_path}`
 
 **重要：**
 - 使用 `python3` 命令直接运行脚本，**不要**使用 `-m` 模块方式
