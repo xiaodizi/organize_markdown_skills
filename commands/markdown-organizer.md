@@ -19,15 +19,51 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 /markdown-organizer @文件路径 https://example.com/post/123
 ```
 
-## 执行步骤
+## Claude 执行流程
 
-1. 解析用户输入，获取 markdown 文件路径（@后跟着的文件路径）和可选的 base_url
-2. 执行脚本美化文档：`python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdown.py {file_path} [base_url]`
-3. 执行脚本增强内容：`python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/enhance_content.py --enhance {file_path}`
+当你执行此命令时，按以下步骤操作：
 
-**重要：**
-- 使用 `python3` 命令直接运行脚本，**不要**使用 `-m` 模块方式
-- 脚本是独立脚本，不是 Python 模块
+### 步骤 1：读取并分析文档
+1. 读取目标 markdown 文件
+2. 分析文档内容，理解主题、技术栈、难度级别
+
+### 步骤 2：生成学习目标和前置知识（Claude 智能思考）
+
+根据文档内容，生成以下内容插入到文档开头（第一个 # 标题之前）：
+
+**学习目标**：
+- 分析文档主题，提取 4-6 个具体可衡量的学习目标
+- 目标应该具体、可执行，例如："能够使用 X 完成 Y"
+- 格式：`- 目标描述`
+
+**前置知识**：
+- 分析文档涉及的技术栈（Python/API/Git 等）
+- 列出阅读本文档需要的前置知识
+- 格式：`- **技术栈名称**：描述`
+
+**FAQ**（如果文档是教程类型）：
+- 根据文档内容生成 2-3 个常见问题
+- 格式：`### 问题\n答案`
+
+### 步骤 3：执行脚本处理图片和格式
+
+```bash
+# 1. 下载图片并美化格式
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdown.py {file_path} [base_url]
+```
+
+## Claude 思考要点
+
+1. **理解文档**：阅读文档内容，判断是教程/概念/参考/故障排查
+2. **提取关键词**：识别技术栈、工具、方法
+3. **生成目标**：基于文档章节和内容，生成有意义的学习目标
+4. **生成前置知识**：识别文档假设读者已具备的知识
+5. **插入位置**：在第一个 `# 标题` 之前插入
+6. **语言风格**：与原文保持一致，用中文
+
+## 注意事项
+
+- **Claude 负责思考**：学习目标、前置知识、FAQ 由 Claude 智能生成
+- **脚本负责执行**：图片下载、格式美化由脚本处理
+- 不要使用 `-m` 模块方式运行脚本
 - 路径分隔符使用 `/`，跨平台兼容
-
-**提示：** `/clear` 不会清除本地项目文件，脚本永久可用。
