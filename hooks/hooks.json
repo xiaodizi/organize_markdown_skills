@@ -11,6 +11,16 @@
           }
         ],
         "description": "Check and install Python dependencies (requests) on session start"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-update.sh"
+          }
+        ],
+        "description": "Check for plugin updates on session start"
       }
     ]
   }
