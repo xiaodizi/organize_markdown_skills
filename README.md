@@ -1,5 +1,130 @@
 # Markdown Organizer
 
+组织和美化从网页复制的 Markdown 文档，自动下载图片到本地并更新引用，利用 AI 智能思考生成学习目标和前置知识。
+
+![](./img/f5339aeb70e245d782f288ba17ace4ff.jpg)
+
+# ✨ 功能特性
+
+| 功能 | 描述 |
+|------|------|
+| 📥 **图片本地化** | 自动下载 Markdown 中的图片到 `img` 文件夹，使用 MD5 哈希命名避免冲突 |
+| 🔗 **路径更新** | 将图片引用从网络 URL 自动更新为本地路径 `./img/filename.jpg` |
+| 🎨 **格式美化** | 标题空行、列表规范化、删除多余空行，统一格式 |
+| 🤖 **AI 内容增强** | 智能生成学习目标、前置知识、FAQ（无需配置） |
+
+# 🚀 安装指南
+
+### 1. Claude Code 插件安装
+
+```bash
+# 1. 添加市场源
+/plugin marketplace add xiaodizi/organize_markdown_skills
+
+# 2. 安装插件
+/plugin install organize_markdown@markdown-organizer
+```
+
+### 2. Gemini CLI 技能安装
+
+```bash
+# 安装技能（需指定路径）
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+> 💡 **提示**：技能文件位于 `.gemini/skills/markdown-organizer/` 子目录，必须使用 `--path` 参数指定路径
+
+# 💻 使用方法
+
+### 方式一：使用自定义命令（推荐）
+
+```bash
+# 基本用法
+/organize @/path/to/article.md
+
+# 处理相对路径图片（提供原网页 URL）
+/organize @article.md https://example.com/post/123
+```
+
+### 方式二：自然语言触发
+
+- `"@文件路径 帮我美化文档"`
+- `"处理这个 markdown 文件"`
+
+### 方式三：直接运行脚本
+
+```bash
+# 不经过 AI 思考，直接执行
+python3 ~/.gemini/skills/markdown-organizer/scripts/organize_markdown.py <文件路径> [base_url]
+```
+
+# 📂 项目结构
+
+```
+organize_markdown_skills/
+├── .claude-plugin/                   # Claude Code 插件配置
+│   ├── plugin.json
+│   └── marketplace.json
+├── .gemini/                          # Gemini CLI 配置
+│   ├── commands/                     # 自定义命令
+│   │   └── organize.md
+│   └── skills/
+│       └── markdown-organizer/       # 技能定义
+│           ├── SKILL.md              # 技能说明
+│           └── scripts/              # 执行脚本
+├── commands/                         # Claude Code 命令
+│   └── markdown-organizer.md
+├── hooks/                            # 插件钩子
+└── ...
+```
+
+# 🗑️ 卸载方法
+
+### Claude Code
+
+```bash
+/plugin uninstall organize_markdown@markdown-organizer
+```
+
+### Gemini CLI
+
+```bash
+# 卸载全局技能
+gemini skills uninstall markdown-organizer
+
+# 卸载工作区技能
+gemini skills uninstall markdown-organizer --scope workspace
+```
+## 🔄 更新技能
+
+### 自动更新
+每次启动 Gemini CLI 会话时，会自动检查技能更新（通过 `check-update.sh` 钩子）。
+
+### 手动更新
+```bash
+# 直接重新安装以更新
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+### 自动更新
+每次启动 Gemini CLI 会话时，会自动检查技能更新（通过 `check-update.sh` 钩子）。
+
+### 手动更新
+```bash
+# 直接重新安装以更新
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+# ❓ 常见问题
+
+**Q: 安装技能时提示 'No valid skills found'？**
+A: 确保使用 `--path .gemini/skills/markdown-organizer` 指定正确路径
+
+**Q: 如何跳过 AI 思考直接执行？**
+A: 使用 `/organize` 命令或直接运行 Python 脚本
+
+**Q: 相对路径图片无法处理？**
+A: 提供 `base_url` 参数，如：`/organize @file.md https://example.com/article`
+
 组织和美化从网页复制的 Markdown 文档，自动下载图片到本地并更新引用，利用 Claude 的智能思考生成学习目标和前置知识。
 
 ![](./img/f5339aeb70e245d782f288ba17ace4ff.jpg)
@@ -17,12 +142,44 @@
 
 ### 安装
 
+#### Claude Code 插件安装
+
 ```bash
 # 1. 添加市场源
 /plugin marketplace add xiaodizi/organize_markdown_skills
 
 # 2. 安装插件
 /plugin install organize_markdown@markdown-organizer
+```
+
+#### Gemini CLI 安装
+
+```bash
+# 安装 skill（需要指定 skill 路径）
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+> ⚠️ 注意：由于 Claude Code 和 Gemini CLI 使用不同的 skill 格式，skill 文件放在 `.gemini/skills/` 子目录中，因此需要使用 `--path` 参数指定路径。
+
+```bash
+# 安装 skill（会自动发现 .gemini/skills 目录）
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git
+
+# 或者指定具体路径安装
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+##### Gemini CLI 使用
+
+```bash
+# 查看已安装的 skills
+gemini skills list
+
+# 在 Gemini CLI 会话中启用 skill
+/organize-markdown @文件路径
+
+# 或者使用自然语言
+# "帮我美化这个 markdown 文档"
 ```
 
 ### 使用
@@ -42,7 +199,14 @@
 
 ## 📖 详细说明
 
-### Claude 智能增强
+### 更新日志
+
+| 版本 | 说明 |
+|------|------|
+| v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
+| v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
+| v1.0.1 | 精简目录结构，优化变量加载路径 |
+| v1.0.0 | 初始版本发布 |
 
 当您运行命令时，Claude 会：
 
@@ -70,18 +234,23 @@ organize_markdown_skills/
 ├── .claude-plugin/                   # 插件配置（发布时由 GitHub 读取）
 │   ├── plugin.json                   # 插件元数据（名称、版本、命令、技能等）
 │   └── marketplace.json              # 市场配置（发布到插件市场）
+├── .gemini/                          # Gemini CLI 配置
+│   └── skills/
+│       └── markdown-organizer/       # Gemini CLI Skill
+│           ├── SKILL.md              # 技能说明
+│           └── scripts/               # Python 脚本
 ├── commands/                         # 命令快捷方式
 │   └── markdown-organizer.md         # /markdown-organizer 命令定义
 ├── hooks/                            # 插件钩子
 │   ├── hooks.json                    # 钩子配置
 │   ├── check-deps.sh                 # 依赖检查（会话启动时自动安装 requests）
 │   └── check-update.sh               # 更新检查（会话启动时检查新版本）
-├── skills/                           # 技能定义
+├── skills/                           # Claude Code 技能定义
 │   └── markdown-organizer/
 │       ├── SKILL.md                  # 技能说明（Claude 执行时的指导）
-│       └── scripts/                  # Python 脚本
-│           ├── organize_markdown.py  # 图片下载与格式美化
-│           └── enhance_content.py    # 内容增强（备用，AI 智能思考替代）
+│       └── scripts/                   # Python 脚本
+│           ├── organize_markdown.py   # 图片下载与格式美化
+│           └── enhance_content.py     # 内容增强（备用，AI 智能思考替代）
 ├── img/                              # 项目资源
 │   └── f5339aeb70e245d782f288ba17ace4ff.jpg  # 插件预览图
 └── README.md                         # 项目说明文档
@@ -116,7 +285,11 @@ pip install requests
 ## 🗑️ 卸载
 
 ```bash
+# Claude Code 卸载
 /plugin uninstall organize_markdown@markdown-organizer
+
+# Gemini CLI 卸载
+gemini skills uninstall markdown-organizer
 ```
 
 ## ❓ 常见问题

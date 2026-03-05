@@ -1,5 +1,5 @@
 {
-  "name": "organize_markdown",
+  "name": "markdown-organizer",
   "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹",
   "version": "1.0.2",
   "author": {
@@ -8,6 +8,12 @@
   "keywords": ["markdown", "organize", "images", "beautify"],
   "homepage": "https://github.com/xiaodizi/organize_markdown_skills",
   "repository": "https://github.com/xiaodizi/organize_markdown_skills.git",
-  "commands": ["./commands/"],
-  "skills": ["./skills/"]
+  "plugins": [
+    {
+      "name": "markdown-organizer",
+      "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹",
+      "version": "1.0.2",
+      "source": "./"
+    }
+  ]
 }
