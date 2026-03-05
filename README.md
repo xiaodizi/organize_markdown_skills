@@ -17,12 +17,44 @@
 
 ### 安装
 
+#### Claude Code 插件安装
+
 ```bash
 # 1. 添加市场源
 /plugin marketplace add xiaodizi/organize_markdown_skills
 
 # 2. 安装插件
 /plugin install organize_markdown@markdown-organizer
+```
+
+#### Gemini CLI 安装
+
+```bash
+# 安装 skill（需要指定 skill 路径）
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+> ⚠️ 注意：由于 Claude Code 和 Gemini CLI 使用不同的 skill 格式，skill 文件放在 `.gemini/skills/` 子目录中，因此需要使用 `--path` 参数指定路径。
+
+```bash
+# 安装 skill（会自动发现 .gemini/skills 目录）
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git
+
+# 或者指定具体路径安装
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+##### Gemini CLI 使用
+
+```bash
+# 查看已安装的 skills
+gemini skills list
+
+# 在 Gemini CLI 会话中启用 skill
+/organize-markdown @文件路径
+
+# 或者使用自然语言
+# "帮我美化这个 markdown 文档"
 ```
 
 ### 使用
@@ -70,18 +102,23 @@ organize_markdown_skills/
 ├── .claude-plugin/                   # 插件配置（发布时由 GitHub 读取）
 │   ├── plugin.json                   # 插件元数据（名称、版本、命令、技能等）
 │   └── marketplace.json              # 市场配置（发布到插件市场）
+├── .gemini/                          # Gemini CLI 配置
+│   └── skills/
+│       └── markdown-organizer/       # Gemini CLI Skill
+│           ├── SKILL.md              # 技能说明
+│           └── scripts/               # Python 脚本
 ├── commands/                         # 命令快捷方式
 │   └── markdown-organizer.md         # /markdown-organizer 命令定义
 ├── hooks/                            # 插件钩子
 │   ├── hooks.json                    # 钩子配置
 │   ├── check-deps.sh                 # 依赖检查（会话启动时自动安装 requests）
 │   └── check-update.sh               # 更新检查（会话启动时检查新版本）
-├── skills/                           # 技能定义
+├── skills/                           # Claude Code 技能定义
 │   └── markdown-organizer/
 │       ├── SKILL.md                  # 技能说明（Claude 执行时的指导）
-│       └── scripts/                  # Python 脚本
-│           ├── organize_markdown.py  # 图片下载与格式美化
-│           └── enhance_content.py    # 内容增强（备用，AI 智能思考替代）
+│       └── scripts/                   # Python 脚本
+│           ├── organize_markdown.py   # 图片下载与格式美化
+│           └── enhance_content.py     # 内容增强（备用，AI 智能思考替代）
 ├── img/                              # 项目资源
 │   └── f5339aeb70e245d782f288ba17ace4ff.jpg  # 插件预览图
 └── README.md                         # 项目说明文档
@@ -116,7 +153,11 @@ pip install requests
 ## 🗑️ 卸载
 
 ```bash
+# Claude Code 卸载
 /plugin uninstall organize_markdown@markdown-organizer
+
+# Gemini CLI 卸载
+gemini skills uninstall markdown-organizer
 ```
 
 ## ❓ 常见问题
