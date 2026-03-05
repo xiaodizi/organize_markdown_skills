@@ -9,6 +9,33 @@ description: Markdown 文档组织和美化工具。用于处理从网页复制�
 
 组织和美化从网页复制的 markdown 文件，自动下载图片到本地并更新引用。
 
+## 执行指令
+
+**重要：当用户触发此技能时，必须直接执行，不要思考推理。按照以下步骤立即执行：**
+
+### 步骤1：获取文件路径
+
+从用户输入中解析出 markdown 文件路径和可选的 base_url。
+
+### 步骤2：直接执行脚本
+
+**禁止思考推理，直接运行以下命令：**
+
+```bash
+# 获取 skill 脚本目录路径
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 确保依赖已安装
+pip install requests -q
+
+# 执行美化脚本
+python3 "$SCRIPT_DIR/scripts/organize_markdown.py" <文件路径> [base_url]
+```
+
+### 步骤3：报告完成
+
+脚本执行完成后，直接报告结果，无需额外分析。
+
 ## 使用方式
 
 ### 触发命令
@@ -27,25 +54,6 @@ organize-markdown @article.md https://example.com/post/123
 - "帮我美化这个 markdown 文档"
 - "处理这个从网页复制的 markdown 文件"
 
-## 工作原理
-
-此技能通过 Gemini CLI 的智能处理 + Scripts 脚本执行：
-
-1. **智能分析**：读取文档内容，生成学习目标、前置知识、FAQ
-2. **脚本执行**：下载图片、美化格式
-
-## Gemini CLI 处理流程
-
-当用户触发命令时，Ggemini CLI 会：
-
-1. **读取并分析**目标 markdown 文档
-2. **智能生成**：
-   - 学习目标（4-6个，基于文档内容）
-   - 前置知识（相关技术栈）
-   - FAQ（如果是教程类型）
-3. **插入内容**到文档开头
-4. **执行脚本**下载图片和美化格式
-
 ## 功能说明
 
 1. **创建 img 文件夹**：在 markdown 文件同目录下创建 `img` 文件夹
@@ -56,37 +64,15 @@ organize-markdown @article.md https://example.com/post/123
 
 ## 脚本说明
 
-Skills 自动执行以下脚本：
-
 ```bash
-# 1. 美化文档（下载图片、格式化）
+# 美化文档（下载图片、格式化）+ 增强内容
 python3 ${SKILL_ROOT}/scripts/organize_markdown.py <文件路径> [base_url]
-
-# 2. 增强内容（添加学习目标、前置知识等）
-python3 ${SKILL_ROOT}/scripts/enhance_content.py --enhance <文件路径>
 ```
 
 ## 依赖
 
 ```bash
 pip install requests
-```
-
-## 手动运行脚本
-
-```bash
-# 脚本位置
-ls -la scripts/
-
-# 方式1：依次运行两个脚本
-python3 ${SKILL_ROOT}/scripts/organize_markdown.py <文件路径> [base_url]
-python3 ${SKILL_ROOT}/scripts/enhance_content.py --enhance <文件路径>
-
-# 方式2：仅运行美化脚本
-python3 ${SKILL_ROOT}/scripts/organize_markdown.py <文件路径> [base_url]
-
-# 方式3：仅运行增强脚本
-python3 ${SKILL_ROOT}/scripts/enhance_content.py --enhance <文件路径>
 ```
 
 ## 注意事项
