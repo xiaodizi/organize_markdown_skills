@@ -17,6 +17,22 @@
 
 ### 安装
 
+#### npx 安装（推荐，无需发布到 npm）
+
+直接从 GitHub 运行安装向导：
+
+```bash
+# 方式一：通过 GitHub 直接运行安装向导（推荐）
+npx github:xiaodizi/organize_markdown_skills skills:add
+
+# 方式二：使用完整 GitHub URL
+npx https://github.com/xiaodizi/organize_markdown_skills skills:add
+```
+
+安装后，按照提示在 Claude Code 或 Gemini CLI 中完成插件配置。
+
+> **说明**：本项目不需要发布到 npm 注册表，直接通过 GitHub 即可使用 npx 安装。
+
 #### Claude Code 插件安装
 
 ```bash
@@ -78,6 +94,7 @@ gemini skills list
 
 | 版本 | 说明 |
 |------|------|
+| v1.0.5 | 新增 npm/npx 安装方式支持、`npx skills-add-organize-markdown` 命令、优化安装体验 |
 | v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
 | v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
 | v1.0.1 | 精简目录结构，优化变量加载路径 |
@@ -114,6 +131,11 @@ organize_markdown_skills/
 │       └── markdown-organizer/       # Gemini CLI Skill
 │           ├── SKILL.md              # 技能说明
 │           └── scripts/               # Python 脚本
+├── bin/                              # npm CLI 工具
+│   ├── cli.js                        # 主 CLI 入口
+│   └── skills-add.js                 # 技能安装向导
+├── scripts/                          # npm 脚本
+│   └── postinstall.js                # npm install 后自动运行
 ├── commands/                         # 命令快捷方式
 │   └── markdown-organizer.md         # /markdown-organizer 命令定义
 ├── hooks/                            # 插件钩子
@@ -128,6 +150,8 @@ organize_markdown_skills/
 │           └── enhance_content.py     # 内容增强（备用，AI 智能思考替代）
 ├── img/                              # 项目资源
 │   └── f5339aeb70e245d782f288ba17ace4ff.jpg  # 插件预览图
+├── package.json                      # npm 包配置
+├── .npmignore                        # npm 发布忽略文件
 └── README.md                         # 项目说明文档
 ```
 
