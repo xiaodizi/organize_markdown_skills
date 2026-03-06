@@ -16,23 +16,36 @@
 
 ## 🚀 快速开始
 
+### 系统要求
+
+- Python 3.6+
+- Node.js 14.0+
+- pip（Python包管理器）
+
 ### 安装
 
-#### npx 安装（推荐，无需发布到 npm）
+#### 通过 GitHub 安装（推荐，无需发布到 npm）
 
-直接从 GitHub 运行安装向导：
+直接从 GitHub 仓库安装：
 
 ```bash
-# 方式一：通过 GitHub 直接运行安装向导（推荐）
-npx github:xiaodizi/organize_markdown_skills skills:add
+# 克隆仓库
+git clone https://github.com/xiaodizi/organize_markdown_skills.git
+cd organize_markdown_skills
 
-# 方式二：使用完整 GitHub URL
-npx https://github.com/xiaodizi/organize_markdown_skills skills:add
+# 方式一：全局安装（推荐）
+npm link
+
+# 方式二：直接运行安装向导
+node bin/cli.js skills:add
+
+# 方式三：通过 npx 运行（从GitHub）
+npx github:xiaodizi/organize_markdown_skills skills:add
 ```
 
 安装后，按照提示在 Claude Code 或 Gemini CLI 中完成插件配置。
 
-> **说明**：本项目不需要发布到 npm 注册表，直接通过 GitHub 即可使用 npx 安装。
+> **说明**：本项目不需要发布到 npm 注册表，直接通过 GitHub 即可安装和使用。
 
 #### Claude Code 插件安装
 
@@ -45,13 +58,6 @@ npx https://github.com/xiaodizi/organize_markdown_skills skills:add
 ```
 
 #### Gemini CLI 安装
-
-```bash
-# 安装 skill（需要指定 skill 路径）
-gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
-```
-
-> ⚠️ 注意：由于 Claude Code 和 Gemini CLI 使用不同的 skill 格式，skill 文件放在 `.gemini/skills/` 子目录中，因此需要使用 `--path` 参数指定路径。
 
 ```bash
 # 安装 skill（会自动发现 .gemini/skills 目录）
@@ -107,6 +113,15 @@ gemini skills list
 - `"将 URL 转换为 markdown 文档"`
 
 ## 📖 详细说明
+
+### 安装方式对比
+
+| 安装方式 | 适用场景 | 命令 |
+|---------|---------|------|
+| **GitHub + npm link** | 开发环境、本地测试 | `git clone` + `npm link` |
+| **npx from GitHub** | 临时使用、CI/CD | `npx github:xiaodizi/organize_markdown_skills` |
+| **Claude Code Plugin** | Claude Code 用户 | `/plugin install` |
+| **Gemini CLI** | Gemini CLI 用户 | `gemini skills install` |
 
 ### 更新日志
 
@@ -198,11 +213,16 @@ organize_markdown_skills/
 
 ## ⚙️ 依赖
 
+### Python 依赖
 ```bash
-pip install requests
+pip install requests beautifulsoup4 html2text
 ```
 
 依赖会在插件安装后自动检查和安装。
+
+### 自动依赖管理
+- 插件启动时会自动检查并安装缺失的依赖
+- 支持离线环境（需预先安装依赖）
 
 ## 🗑️ 卸载
 
@@ -228,9 +248,23 @@ A: Claude 会根据文档内容智能生成，您可以在生成后手动调整
 **Q: 如何跳过 AI 内容增强？**
 A: 当前版本 AI 增强是默认行为，如需纯脚本处理可使用 `organize_markdown.py` 单独运行
 
+**Q: npx 安装失败？**
+A: 请确保使用 GitHub 地址格式：`npx github:xiaodizi/organize_markdown_skills`
+
+**Q: 如何确认安装成功？**
+A: 运行 `organize-markdown help` 或检查命令是否存在
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
 ## 📝 许可证
 
 MIT License
+
+## 👥 作者
+
+- **付磊** - 初始工作 - [xiaodizi](https://github.com/xiaodizi)
 
 ## 🔗 相关链接
 
