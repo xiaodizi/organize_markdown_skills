@@ -264,7 +264,7 @@ MIT License
 
 ## 👥 作者
 
-- **付磊** - 初始工作 - [xiaodizi](https://github.com/xiaodizi)
+- 初始工作 - [xiaodizi](https://github.com/xiaodizi)
 
 ## 🔗 相关链接
 
