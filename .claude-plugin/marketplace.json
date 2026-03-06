@@ -1,13 +1,8 @@
 {
-  "name": "markdown-organizer",
+  "name": "organize_markdown",
   "owner": {
     "name": "xiaodizi",
     "url": "https://github.com/xiaodizi/organize_markdown_skills"
   },
-  "plugins": [
-    {
-      "name": "markdown-organizer",
-      "source": "./"
-    }
-  ]
+  "source": "./"
 }

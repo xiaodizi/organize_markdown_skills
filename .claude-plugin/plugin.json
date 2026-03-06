@@ -1,5 +1,5 @@
 {
-  "name": "markdown-organizer",
+  "name": "organize_markdown",
   "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹，支持 URL 直接转换为 Markdown",
   "version": "1.0.6",
   "author": {
@@ -8,12 +8,28 @@
   "keywords": ["markdown", "organize", "images", "beautify", "npm", "npx", "url", "webpage"],
   "homepage": "https://github.com/xiaodizi/organize_markdown_skills",
   "repository": "https://github.com/xiaodizi/organize_markdown_skills.git",
-  "plugins": [
+  "commands": [
     {
       "name": "markdown-organizer",
-      "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹，支持 URL 直接转换为 Markdown",
-      "version": "1.0.6",
-      "source": "./"
+      "description": "组织和美化 markdown 文档，自动下载图片到本地 img 文件夹",
+      "source": "./commands/markdown-organizer.md"
+    },
+    {
+      "name": "url-to-markdown",
+      "description": "将网页 URL 转换为 Markdown 格式，支持图片下载和内容增强",
+      "source": "./commands/url-to-markdown.md"
+    }
+  ],
+  "skills": [
+    {
+      "name": "markdown-organizer",
+      "description": "组织和美化 markdown 文档的核心技能",
+      "source": "./skills/markdown-organizer/SKILL.md"
+    },
+    {
+      "name": "url-to-markdown",
+      "description": "将网页 URL 转换为 Markdown 的技能",
+      "source": "./skills/url-to-markdown/SKILL.md"
     }
   ]
 }
