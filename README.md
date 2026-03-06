@@ -1,6 +1,6 @@
 # Markdown Organizer
 
-组织和美化从网页复制的 Markdown 文档，自动下载图片到本地并更新引用，利用 Claude 的智能思考生成学习目标和前置知识。
+组织和美化从网页复制的 Markdown 文档，支持直接从 URL 转换网页为 Markdown，自动下载图片到本地并更新引用，利用 Claude 的智能思考生成学习目标和前置知识。
 
 ![](./img/f5339aeb70e245d782f288ba17ace4ff.jpg)
 
@@ -8,6 +8,7 @@
 
 | 功能 | 描述 |
 |------|------|
+| 🌐 **URL 转 Markdown** | 直接从网页 URL 获取内容并转换为清晰的 Markdown 文档 |
 | 📥 **图片本地化** | 自动下载 Markdown 中的图片到 `img` 文件夹，使用 MD5 哈希命名避免冲突 |
 | 🔗 **路径更新** | 将图片引用从网络 URL 自动更新为本地路径 `./img/filename.jpg` |
 | 🎨 **格式美化** | 标题空行、列表规范化、删除多余空行，统一格式 |
@@ -75,6 +76,8 @@ gemini skills list
 
 ### 使用
 
+#### markdown-organizer - 美化现有 Markdown 文档
+
 ```bash
 # 基本用法
 /markdown-organizer @/path/to/article.md
@@ -83,10 +86,25 @@ gemini skills list
 /markdown-organizer @article.md https://example.com/post/123
 ```
 
+#### url-to-markdown - 从 URL 直接转换为 Markdown
+
+```bash
+# 基本用法（自动生成文件名）
+/url-to-markdown https://example.com/post/123
+
+# 指定输出文件路径
+/url-to-markdown https://example.com/post/123 ./docs/article.md
+```
+
 ### 自然语言触发
 
+**markdown-organizer**:
 - `"@文件路径 帮我美化文档"`
 - `"处理这个 markdown 文件"`
+
+**url-to-markdown**:
+- `"把这个网页保存为 markdown"`
+- `"将 URL 转换为 markdown 文档"`
 
 ## 📖 详细说明
 
@@ -94,6 +112,7 @@ gemini skills list
 
 | 版本 | 说明 |
 |------|------|
+| v1.0.6 | 新增 url-to-markdown 技能，支持直接从 URL 转换网页为 Markdown、新增依赖 beautifulsoup4 和 html2text |
 | v1.0.5 | 新增 npm/npx 安装方式支持、`npx skills-add-organize-markdown` 命令、优化安装体验 |
 | v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
 | v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
@@ -127,8 +146,14 @@ organize_markdown_skills/
 │   ├── plugin.json                   # 插件元数据（名称、版本、命令、技能等）
 │   └── marketplace.json              # 市场配置（发布到插件市场）
 ├── .gemini/                          # Gemini CLI 配置
+│   ├── commands/
+│   │   ├── organize.md               # /organize 命令定义
+│   │   └── url-to-markdown.md        # /url-to-markdown 命令定义
 │   └── skills/
-│       └── markdown-organizer/       # Gemini CLI Skill
+│       ├── markdown-organizer/       # Gemini CLI Skill - markdown 美化
+│       │   ├── SKILL.md              # 技能说明
+│       │   └── scripts/               # Python 脚本
+│       └── url-to-markdown/          # Gemini CLI Skill - URL 转 markdown
 │           ├── SKILL.md              # 技能说明
 │           └── scripts/               # Python 脚本
 ├── bin/                              # npm CLI 工具
@@ -137,17 +162,22 @@ organize_markdown_skills/
 ├── scripts/                          # npm 脚本
 │   └── postinstall.js                # npm install 后自动运行
 ├── commands/                         # 命令快捷方式
-│   └── markdown-organizer.md         # /markdown-organizer 命令定义
+│   ├── markdown-organizer.md         # /markdown-organizer 命令定义
+│   └── url-to-markdown.md            # /url-to-markdown 命令定义
 ├── hooks/                            # 插件钩子
 │   ├── hooks.json                    # 钩子配置
 │   ├── check-deps.sh                 # 依赖检查（会话启动时自动安装 requests）
 │   └── check-update.sh               # 更新检查（会话启动时检查新版本）
 ├── skills/                           # Claude Code 技能定义
-│   └── markdown-organizer/
+│   ├── markdown-organizer/
+│   │   ├── SKILL.md                  # 技能说明（Claude 执行时的指导）
+│   │   └── scripts/                   # Python 脚本
+│   │       ├── organize_markdown.py   # 图片下载与格式美化
+│   │       └── enhance_content.py     # 内容增强（备用，AI 智能思考替代）
+│   └── url-to-markdown/
 │       ├── SKILL.md                  # 技能说明（Claude 执行时的指导）
-│       └── scripts/                   # Python 脚本
-│           ├── organize_markdown.py   # 图片下载与格式美化
-│           └── enhance_content.py     # 内容增强（备用，AI 智能思考替代）
+│       └── scripts/
+│           └── url_to_markdown.py     # URL 转 Markdown 脚本
 ├── img/                              # 项目资源
 │   └── f5339aeb70e245d782f288ba17ace4ff.jpg  # 插件预览图
 ├── package.json                      # npm 包配置
