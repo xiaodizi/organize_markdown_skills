@@ -17,21 +17,21 @@
 
 ### 安装
 
-#### npm/npx 安装（推荐）
+#### npx 安装（推荐，无需发布到 npm）
+
+直接从 GitHub 运行安装向导：
 
 ```bash
-# 方式一：通过 npx 直接运行安装向导
-npx skills-add-organize-markdown
+# 方式一：通过 GitHub 直接运行安装向导（推荐）
+npx github:xiaodizi/organize_markdown_skills skills:add
 
-# 方式二：先安装 npm 包，再运行安装命令
-npm install -g organize-markdown-skills
-skills-add-organize-markdown
-
-# 方式三：使用 npm 包的内置命令
-npx organize-markdown-skills skills:add
+# 方式二：使用完整 GitHub URL
+npx https://github.com/xiaodizi/organize_markdown_skills skills:add
 ```
 
 安装后，按照提示在 Claude Code 或 Gemini CLI 中完成插件配置。
+
+> **说明**：本项目不需要发布到 npm 注册表，直接通过 GitHub 即可使用 npx 安装。
 
 #### Claude Code 插件安装
 
