@@ -4,5 +4,6 @@
     "name": "xiaodizi",
     "url": "https://github.com/xiaodizi/organize_markdown_skills"
   },
-  "source": "./"
+  "source": "./",
+  "plugins": ["organize_markdown"]
 }
