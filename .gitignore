@@ -4,3 +4,6 @@
 .git
 PLUGIN_INSTALL_BRANCH.md
 AGENTS.md
+.omc/
+.ruff_cache/
+node_modules/
