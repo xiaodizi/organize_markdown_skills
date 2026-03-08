@@ -73,12 +73,16 @@ gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git -
 # 查看已安装的 skills
 gemini skills list
 
-# 在 Gemini CLI 会话中启用 skill
-/organize-markdown @文件路径
+# 在 Gemini CLI 会话中直接使用完整命令（注意：Gemini CLI 不支持 "/" 命令自动补全）
+/markdown-organizer @文件路径 [base_url]
+/url-to-markdown <URL> [输出文件路径]
 
 # 或者使用自然语言
 # "帮我美化这个 markdown 文档"
+# "把这个网页保存为 markdown"
 ```
+
+> **重要提示**：Google Gemini CLI (v0.32.1) 不支持 Claude Code 的 "/" 命令自动补全功能。安装技能后，您需要直接输入完整的命令（如 `/markdown-organizer`）来使用功能，而不是期望输入 "/" 后显示命令列表。
 
 ### 使用
 
