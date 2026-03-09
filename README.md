@@ -54,7 +54,7 @@ npx github:xiaodizi/organize_markdown_skills skills:add
 /plugin marketplace add xiaodizi/organize_markdown_skills
 
 # 2. 安装插件
-/plugin install organize_markdown@markdown-organizer
+/plugin install organize_markdown
 ```
 
 #### Gemini CLI 安装
@@ -230,12 +230,86 @@ pip install requests beautifulsoup4 html2text
 
 ## 🗑️ 卸载
 
-```bash
-# Claude Code 卸载
-/plugin uninstall organize_markdown@markdown-organizer
+### Claude Code 插件卸载
 
-# Gemini CLI 卸载
+Claude Code 插件的卸载需要根据安装方式进行不同的操作：
+
+#### 方法一：通过 `/plugin install` 安装的插件
+```bash
+# 1. 查看已安装的插件列表
+/plugin list
+
+# 2. 卸载插件（使用正确的插件标识符）
+/plugin uninstall organize_markdown
+
+# 3. 如果卸载命令不可用，使用手动清理方法
+```
+
+#### 方法二：手动清理（最可靠的方法）
+```bash
+# 1. 删除插件缓存目录
+rm -rf ~/.claude/plugins/cache/organize_markdown/
+
+# 2. 删除 marketplace 目录
+rm -rf ~/.claude/plugins/marketplaces/organize_markdown/
+
+# 3. 清理配置文件（重要步骤）
+# 备份配置文件
+cp ~/.claude/plugins/installed_plugins.json ~/.claude/plugins/installed_plugins.json.backup
+cp ~/.claude/plugins/known_marketplaces.json ~/.claude/plugins/known_marketplaces.json.backup
+
+# 编辑 installed_plugins.json，删除 "organize_markdown@organize_markdown" 条目
+# 编辑 known_marketplaces.json，删除 "organize_markdown" 条目
+
+# 4. 重启 Claude Code 会话以确保更改生效
+```
+
+#### 方法三：本地开发插件清理
+如果你是在项目目录中开发插件（通过 `.claude-plugin/` 目录）：
+```bash
+# 在项目根目录中
+rm -rf .claude-plugin/
+# 或者临时禁用
+mv .claude-plugin .claude-plugin.disabled
+```
+
+### Gemini CLI 卸载
+```bash
+# 查看已安装的技能
+gemini skills list
+
+# 卸载 markdown-organizer 技能
 gemini skills uninstall markdown-organizer
+
+# 卸载 url-to-markdown 技能
+gemini skills uninstall url-to-markdown
+
+# 或者卸载整个仓库
+gemini skills uninstall organize_markdown_skills
+```
+
+### npm 全局安装卸载
+```bash
+# 如果使用 npm link 安装
+cd organize_markdown_skills
+npm unlink
+
+# 清理全局命令（如果存在）
+which organize-markdown  # 检查命令是否存在
+# 如果存在，通常 npm unlink 会自动清理
+```
+
+### 验证卸载是否成功
+```bash
+# Claude Code 环境
+/plugin list | grep organize_markdown
+
+# 检查插件目录
+ls ~/.claude/plugins/cache/ | grep organize_markdown
+ls ~/.claude/plugins/marketplaces/ | grep organize_markdown
+
+# Gemini CLI 环境
+gemini skills list | grep markdown-organizer
 ```
 
 ## ❓ 常见问题
