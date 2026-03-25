@@ -76,7 +76,19 @@ npx github:xiaodizi/organize_markdown_skills wechat-format input.md output.html
 # 安装 skill（会自动发现 .gemini/skills 目录）
 gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git
 
-# 或者指定具体路径安装
+# 或者指定具体路径安装单个 skill
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
+```
+
+##### 更新 Gemini CLI 技能
+
+重新安装即可更新到最新版本：
+
+```bash
+# 更新全部技能
+gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git
+
+# 更新单个 skill
 gemini skills install https://github.com/xiaodizi/organize_markdown_skills.git --path .gemini/skills/markdown-organizer
 ```
 
