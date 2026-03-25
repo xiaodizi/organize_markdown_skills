@@ -2,7 +2,7 @@
 
 组织和美化从网页复制的 Markdown 文档，支持直接从 URL 转换网页为 Markdown，自动下载图片到本地并更新引用，利用 Claude 的智能思考生成学习目标和前置知识。
 
-![](./img/f5339aeb70e245d782f288ba17ace4ff.jpg)
+![](./images/f5339aeb70e245d782f288ba17ace4ff.jpg)
 
 ## ✨ 功能特性
 
@@ -66,12 +66,9 @@ npx github:xiaodizi/organize_markdown_skills wechat-format input.md output.html
 
 # 2. 安装插件
 /plugin install organize_markdown
-
-# 3. 安装 Python 依赖（必须）
-#    找到插件安装目录，一般在 ~/.claude/plugins/cache/organize_markdown/organize_markdown/<version>/
-cd ~/.claude/plugins/cache/organize_markdown/organize_markdown/[version]/
-pip install -r requirements.txt
 ```
+
+> 💡 **自动安装依赖**：插件启动时会自动检查并安装缺失的 Python 依赖，不需要手动安装。
 
 #### Gemini CLI 安装
 
@@ -304,11 +301,18 @@ python skills/url-to-markdown/scripts/url_to_markdown.py https://example.com/pos
 ## ⚙️ 依赖
 
 ### Python 依赖
+
 ```bash
-pip install requests beautifulsoup4 html2text
+pip install requests beautifulsoup4 html2text markdown
 ```
 
-依赖会在插件安装后自动检查和安装。
+> 💡 **自动安装**：Claude Code 插件启动时会自动检查并安装缺失的依赖，不需要手动操作。
+
+**包含依赖**：
+- `requests` - HTTP 请求
+- `beautifulsoup4` - HTML 解析
+- `html2text` - HTML 转 Markdown
+- `markdown` - Markdown 转 HTML（用于 wechat-format）
 
 ### 自动依赖管理
 - 插件启动时会自动检查并安装缺失的依赖
