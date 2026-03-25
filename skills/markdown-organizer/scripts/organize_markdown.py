@@ -260,14 +260,31 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     print("\n✅ 完成！")
 
 
+def show_help():
+    """显示帮助信息"""
+    print("用法: markdown-organizer <markdown文件> [base_url]")
+    print("")
+    print("组织和美化 Markdown 文档，自动下载网络图片到本地并更新引用")
+    print("")
+    print("参数:")
+    print("  <markdown文件>      输入 Markdown 文件路径 (必填)")
+    print("  [base_url]          基础 URL，用于处理相对路径图片（可选，当图片链接是相对路径时需要提供原网页 URL）")
+    print("")
+    print("示例:")
+    print("  markdown-organizer article.md")
+    print("  markdown-organizer article.md https://example.com/article")
+
 def main():
     """命令行入口"""
-    if len(sys.argv) < 2:
-        print("用法: python organize_markdown.py <markdown文件路径> [base_url]")
-        print(
-            "示例: python organize_markdown.py article.md https://example.com/article"
-        )
-        sys.exit(1)
+    import sys
+
+    if len(sys.argv) < 2 or sys.argv[1] in ["--help", "-h"]:
+        show_help()
+        if len(sys.argv) < 2:
+            print("\n❌ 错误: 缺少必填参数: markdown文件")
+            sys.exit(1)
+        else:
+            sys.exit(0)
 
     file_path = sys.argv[1]
     base_url = sys.argv[2] if len(sys.argv) > 2 else ""
