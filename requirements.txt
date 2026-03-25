@@ -1,0 +1,8 @@
+# organize_markdown Python dependencies
+# Install after plugin installation with:
+# pip install -r requirements.txt
+
+markdown>=3.10
+requests>=2.30
+beautifulsoup4>=4.10
+html2text>=2024.1.28
