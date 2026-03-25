@@ -160,33 +160,46 @@ gemini skills list
 - `"帮我把这个 markdown 转换为微信公众号格式"`
 - `"转换为微信公众号 HTML"`
 
-### 命令行直接使用（新增）
+### 💻 系统终端命令
 
-安装后可以直接在终端使用三个独立命令：
+通过 `npm install` 或 `npm link` 安装后，系统终端将可用以下命令：
 
+#### 主要功能命令
 ```bash
 # markdown-organizer - 组织和美化现有 Markdown 文档
-npx markdown-organizer input.md
-npx markdown-organizer input.md https://example.com/post
+markdown-organizer input.md
+markdown-organizer input.md https://example.com/post
 
 # url-to-markdown - 从 URL 转换为 Markdown
-npx url-to-markdown https://example.com/post/123
-npx url-to-markdown https://example.com/post/123 output.md
-npx url-to-markdown https://example.com/post/123 output.md --render  # 启用 JS 渲染
+url-to-markdown https://example.com/post/123
+url-to-markdown https://example.com/post/123 output.md
+url-to-markdown https://example.com/post/123 output.md --render  # 启用 JS 渲染
 
 # wechat-format - Markdown 转换为微信公众号 HTML
-npx wechat-format input.md
-npx wechat-format input.md output.html
+wechat-format input.md
+wechat-format input.md output.html
+wechat-format input.md output.html --no-emoji  # 不在标题添加 Emoji
 ```
 
-如果你使用 `npm link` 全局安装，可以省略 `npx`：
-
+#### 安装辅助命令
 ```bash
-# 全局安装后直接使用
-markdown-organizer ./article.md
-url-to-markdown https://example.com/article article.md
-wechat-format article.md article.html
+# skills-add-organize-markdown - Claude Code 技能安装向导
+skills-add-organize-markdown
 ```
+
+#### 临时使用（无需安装）
+如果不想全局安装，也可以通过 `npx` 临时使用：
+```bash
+# 通过 GitHub 仓库临时运行
+npx github:xiaodizi/organize_markdown_skills markdown-organizer input.md
+npx github:xiaodizi/organize_markdown_skills url-to-markdown https://example.com/post/123 output.md
+npx github:xiaodizi/organize_markdown_skills wechat-format input.md output.html
+```
+
+**命令说明**：
+- 全局安装（`npm link`）后，所有命令可在任何目录直接使用
+- 临时使用（`npx`）无需安装，适合 CI/CD 或一次性任务
+- 所有命令都支持 `--help` 参数查看详细用法
 
 ## 📖 详细说明
 
@@ -200,33 +213,37 @@ wechat-format article.md article.html
 | **Gemini CLI** | Gemini CLI AI 辅助使用 | `gemini skills install` → 在 Gemini CLI 会话中使用斜杠命令 |
 | **Docker 沙箱** | 本地手工测试 | 参见 [DOCKER_TEST.md](./DOCKER_TEST.md) |
 
-### 沙箱测试
+### 沙箱测试环境
 
-本项目提供 Docker 沙箱环境配置用于本地手工测试，包含 Node.js、Python、Claude Code CLI、Gemini CLI 完整环境。详细构建和使用说明参见 [DOCKER_TEST.md](./DOCKER_TEST.md)。
+本项目提供完整的 Docker 沙箱环境，用于本地手工测试和开发验证。该环境包含：
 
-### 更新日志
+- **Node.js 18** - 运行 Claude Code 和 Gemini CLI
+- **Python 3.11** - 支持所有 Python 依赖
+- **Claude Code CLI** - 完整的 Claude Code 命令行工具
+- **Gemini CLI** - Google Gemini 命令行工具
+- **预配置代理** - 通过宿主机 7890 端口访问网络
 
-完整版本更新历史参见 [CHANGELOG.md](./CHANGELOG.md)
+**环境特点**：
+- 国内镜像加速（阿里云 apt 源、清华 pip 源、npmmirror npm 源）
+- 自动安装所有 Python 依赖
+- 预配置 Claude Code 模型设置
+- 支持完整测试三个命令：`markdown-organizer`、`url-to-markdown`、`wechat-format`
+
+详细构建步骤、使用方法和常见问题解决方案，请参见 [DOCKER_TEST.md](./DOCKER_TEST.md) 文档。
+
+### 📋 更新日志
+
+**完整详细的版本更新历史请参见 [CHANGELOG.md](./CHANGELOG.md)**
 
 | 版本 | 说明 |
 |------|------|
-| v1.0.7 | 新增 wechat-format 技能，支持将 Markdown 转换为微信公众号 HTML 格式、新增三个独立系统命令 `markdown-organizer`/`url-to-markdown`/`wechat-format` 支持 npx 直接调用 |
-| v1.0.6 | 新增 url-to-markdown 技能，支持直接从 URL 转换网页为 Markdown、新增依赖 beautifulsoup4 和 html2text |
-| v1.0.5 | 新增 npm/npx 安装方式支持、`npx skills-add-organize-markdown` 命令、优化安装体验 |
-| v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
-| v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
-| v1.0.1 | 精简目录结构，优化变量加载路径 |
-| v1.0.0 | 初始版本发布 |
-
-| 版本 | 说明 |
-|------|------|
-| v1.0.7 | 新增 wechat-format 技能，支持将 Markdown 转换为微信公众号 HTML 格式、新增三个独立系统命令 `markdown-organizer`/`url-to-markdown`/`wechat-format` 支持 npx 直接调用 |
-| v1.0.6 | 新增 url-to-markdown 技能，支持直接从 URL 转换网页为 Markdown、新增依赖 beautifulsoup4 和 html2text |
-| v1.0.5 | 新增 npm/npx 安装方式支持、`npx skills-add-organize-markdown` 命令、优化安装体验 |
-| v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
-| v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
-| v1.0.1 | 精简目录结构，优化变量加载路径 |
-| v1.0.0 | 初始版本发布 |
+| **v1.0.7** | ✨ 新增 wechat-format 技能，支持将 Markdown 转换为微信公众号 HTML 格式<br/>✨ 新增三个独立系统命令：`markdown-organizer`、`url-to-markdown`、`wechat-format`，支持 npx 直接调用<br/>✨ 完善 Docker 沙箱环境，预装 gemini-cli |
+| **v1.0.6** | ✨ 新增 url-to-markdown 技能，支持直接从 URL 转换网页为 Markdown<br/>📦 新增依赖 beautifulsoup4 和 html2text |
+| **v1.0.5** | ✨ 新增 npm/npx 安装方式支持<br/>🚀 新增 `npx skills-add-organize-markdown` 命令<br/>⚡ 优化安装体验 |
+| **v1.0.4** | ✨ 新增 Gemini CLI 技能支持<br/>⚡ 直接执行命令 `/organize`<br/>📚 优化文档结构 |
+| **v1.0.2** | 🤖 Claude 智能思考生成学习目标和前置知识（无需配置）<br/>🔄 自动更新检查 |
+| **v1.0.1** | 📂 精简目录结构，优化变量加载路径 |
+| **v1.0.0** | 🚀 初始版本发布 |
 
 当您运行命令时，Claude 会：
 
@@ -238,7 +255,7 @@ wechat-format article.md article.html
 3. **自动插入**内容到文档开头
 4. **执行脚本**下载图片和美化格式
 
-所有内容生成由 Claude 智能完成，**无需任何 API 配置**。
+所有内容生成由 Claude 智能完成，**无需任何 再次单独的 API 配置**。
 
 ### 图片处理
 

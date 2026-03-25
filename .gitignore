@@ -7,3 +7,6 @@ AGENTS.md
 .omc/
 .ruff_cache/
 node_modules/
+__pycache__/
+*.pyc
+settings.json
