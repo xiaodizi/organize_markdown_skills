@@ -32,6 +32,9 @@ RUN npm config set registry https://registry.npmmirror.com
 # 安装 Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code
 
+# 安装 Gemini CLI
+RUN npm install -g @google/gemini-cli
+
 # 创建干净的 Claude Code 配置，只保留必要的模型配置
 RUN mkdir -p /root/.claude
 RUN echo '{ \

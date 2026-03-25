@@ -101,10 +101,12 @@ gemini skills list
 # 在 Gemini CLI 会话中直接使用完整命令（注意：Gemini CLI 不支持 "/" 命令自动补全）
 /markdown-organizer @文件路径 [base_url]
 /url-to-markdown <URL> [输出文件路径]
+/wechat-format @文件路径 [输出路径]
 
 # 或者使用自然语言
 # "帮我美化这个 markdown 文档"
 # "把这个网页保存为 markdown"
+# "帮我转换为微信公众号格式"
 ```
 
 > **重要提示**：Google Gemini CLI (v0.32.1) 不支持 Claude Code 的 "/" 命令自动补全功能。安装技能后，您需要直接输入完整的命令（如 `/markdown-organizer`）来使用功能，而不是期望输入 "/" 后显示命令列表。
@@ -131,6 +133,19 @@ gemini skills list
 /url-to-markdown https://example.com/post/123 ./docs/article.md
 ```
 
+#### wechat-format - Markdown 转换为微信公众号 HTML
+
+```bash
+# 基本用法（自动生成 *_wechat.html）
+/wechat-format @/path/to/article.md
+
+# 指定输出文件路径
+/wechat-format @article.md ./article.html
+
+# 不在标题添加 Emoji
+/wechat-format @article.md ./article.html --no-emoji
+```
+
 ### 自然语言触发
 
 **markdown-organizer**:
@@ -140,6 +155,10 @@ gemini skills list
 **url-to-markdown**:
 - `"把这个网页保存为 markdown"`
 - `"将 URL 转换为 markdown 文档"`
+
+**wechat-format**:
+- `"帮我把这个 markdown 转换为微信公众号格式"`
+- `"转换为微信公众号 HTML"`
 
 ### 命令行直接使用（新增）
 
@@ -179,8 +198,25 @@ wechat-format article.md article.html
 | **npx from GitHub** | 临时使用、CI/CD | `npx github:xiaodizi/organize_markdown_skills [command]` → 直接运行无需安装 |
 | **Claude Code Plugin** | Claude Code AI 辅助使用 | `/plugin install` → 在 Claude Code 会话中使用斜杠命令 |
 | **Gemini CLI** | Gemini CLI AI 辅助使用 | `gemini skills install` → 在 Gemini CLI 会话中使用斜杠命令 |
+| **Docker 沙箱** | 本地手工测试 | 参见 [DOCKER_TEST.md](./DOCKER_TEST.md) |
+
+### 沙箱测试
+
+本项目提供 Docker 沙箱环境配置用于本地手工测试，包含 Node.js、Python、Claude Code CLI、Gemini CLI 完整环境。详细构建和使用说明参见 [DOCKER_TEST.md](./DOCKER_TEST.md)。
 
 ### 更新日志
+
+完整版本更新历史参见 [CHANGELOG.md](./CHANGELOG.md)
+
+| 版本 | 说明 |
+|------|------|
+| v1.0.7 | 新增 wechat-format 技能，支持将 Markdown 转换为微信公众号 HTML 格式、新增三个独立系统命令 `markdown-organizer`/`url-to-markdown`/`wechat-format` 支持 npx 直接调用 |
+| v1.0.6 | 新增 url-to-markdown 技能，支持直接从 URL 转换网页为 Markdown、新增依赖 beautifulsoup4 和 html2text |
+| v1.0.5 | 新增 npm/npx 安装方式支持、`npx skills-add-organize-markdown` 命令、优化安装体验 |
+| v1.0.4 | 新增 Gemini CLI 技能支持、直接执行命令 `/organize`、优化文档结构 |
+| v1.0.2 | Claude 智能思考生成学习目标和前置知识（无需配置）、自动更新检查 |
+| v1.0.1 | 精简目录结构，优化变量加载路径 |
+| v1.0.0 | 初始版本发布 |
 
 | 版本 | 说明 |
 |------|------|
