@@ -135,6 +135,38 @@ STOP_WORDS = {
     "this",
 }
 
+PREREQUISITE_DESCRIPTIONS = {
+    "Python 基础": "了解语法、虚拟环境与 `pip` 常见操作。",
+    "JavaScript 基础": "理解变量、函数、模块与异步基础。",
+    "TypeScript 基础": "了解类型系统、接口与泛型的基本用法。",
+    "JavaScript/TypeScript 基础": "理解 JS 语法与 TS 类型标注，能阅读前端工程代码。",
+    "命令行基础": "能在终端完成目录切换、文件操作与命令执行。",
+    "Git 版本控制": "了解分支、提交与拉取/推送等基础流程。",
+    "Markdown 语法": "熟悉标题、列表、代码块与链接等常见语法。",
+    "HTML/CSS 基础": "能理解页面结构与基础样式规则。",
+    "数据库基础": "了解基本数据模型与常见查询语句。",
+    "API 概念": "理解请求/响应、状态码与接口调用流程。",
+    "Docker 基础": "了解镜像、容器与常用运行命令。",
+    "编程基础知识": "具备变量、条件、循环与函数等通用编程能力。",
+}
+
+PREREQUISITE_PRIORITY = [
+    "Python 基础",
+    "JavaScript/TypeScript 基础",
+    "JavaScript 基础",
+    "TypeScript 基础",
+    "React 基础",
+    "Vue 基础",
+    "命令行基础",
+    "Git 版本控制",
+    "API 概念",
+    "数据库基础",
+    "Docker 基础",
+    "Markdown 语法",
+    "HTML/CSS 基础",
+    "编程基础知识",
+]
+
 
 def analyze_document(file_path: str | Path) -> Dict:
     """分析文档结构，返回分析结果"""
@@ -302,12 +334,14 @@ def detect_prerequisites(content: str) -> Set[str]:
                     detected_prereqs.add("JavaScript 基础")
                 elif category == "typescript":
                     detected_prereqs.add("TypeScript 基础")
+                elif category == "react":
+                    detected_prereqs.add("React 基础")
+                elif category == "vue":
+                    detected_prereqs.add("Vue 基础")
                 elif category == "shell":
                     detected_prereqs.add("命令行基础")
                 elif category == "git":
                     detected_prereqs.add("Git 版本控制")
-                elif category == "Markdown语法":
-                    detected_prereqs.add("Markdown 语法")
                 elif category == "html_css":
                     detected_prereqs.add("HTML/CSS 基础")
                 elif category == "sql":
@@ -325,6 +359,16 @@ def detect_prerequisites(content: str) -> Set[str]:
         kw in content for kw in ["教程", "入门", "初学者", "learn", "tutorial", "guide"]
     ):
         detected_prereqs.add("编程基础知识")
+
+    # 去重和去泛化：JS/TS 同时出现时合并；已有多项具体技能时移除泛化项
+    if "JavaScript 基础" in detected_prereqs and "TypeScript 基础" in detected_prereqs:
+        detected_prereqs.discard("JavaScript 基础")
+        detected_prereqs.discard("TypeScript 基础")
+        detected_prereqs.add("JavaScript/TypeScript 基础")
+
+    specific_count = len(detected_prereqs - {"编程基础知识"})
+    if specific_count >= 3:
+        detected_prereqs.discard("编程基础知识")
 
     return detected_prereqs
 
@@ -408,8 +452,15 @@ def generate_prerequisites_content(content: str, detected_prereqs: Set[str]) -> 
     if detected_prereqs:
         lines.append("本文档涉及以下技术栈和概念，建议提前了解：")
         lines.append("")
-        for prereq in sorted(detected_prereqs):
-            lines.append(f"- **{prereq}**")
+        prioritized = sorted(
+            detected_prereqs,
+            key=lambda x: PREREQUISITE_PRIORITY.index(x)
+            if x in PREREQUISITE_PRIORITY
+            else len(PREREQUISITE_PRIORITY),
+        )
+        for prereq in prioritized[:6]:
+            description = PREREQUISITE_DESCRIPTIONS.get(prereq, "建议具备相关基础后再开始实操。")
+            lines.append(f"- **{prereq}**：{description}")
     else:
         lines.append("本文档假设您具备以下基础知识：")
         lines.append("")
@@ -581,6 +632,9 @@ def enhance_markdown_content(file_path: str | Path) -> str:
     if len(analysis["steps"]) > 0 and not analysis["has_faq"]:
         faq_section = generate_faq_content(content, analysis)
         enhanced_content = enhanced_content.rstrip() + "\n\n" + faq_section
+
+    # 规范标题前空行，避免出现 "...文本。## 标题" 的粘连问题
+    enhanced_content = re.sub(r"([^\n])\n(#{1,6}\s)", r"\1\n\n\2", enhanced_content)
 
     # 确保文件以换行结束，避免标题渲染异常
     enhanced_content = enhanced_content.rstrip("\n") + "\n"

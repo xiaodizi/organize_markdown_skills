@@ -1,7 +1,7 @@
 ---
 name: organize_markdown
 description: 组织和美化 markdown 文档，自动下载图片到本地 img 文件夹，支持 URL 直接转换为 Markdown
-version: 1.0.6
+version: v1.0.7-fix
 author:
   name: lei.fu
 keywords: ["markdown", "organize", "images", "beautify", "url", "webpage"]
@@ -35,5 +35,28 @@ repository: https://github.com/xiaodizi/organize_markdown_skills.git
 - 自动下载图片到本地 `img` 文件夹
 - 更新图片引用为本地路径
 - 美化 Markdown 格式（标题空行、列表规范化等）
-- AI 智能生成学习目标、前置知识、FAQ
+- 基于文档内容自动生成学习目标、前置知识、FAQ
 - 支持相对路径图片处理（通过 base_url 参数）
+- 保证输出文档末尾换行，避免标题渲染异常
+
+## 执行流程（Gemini CLI）
+
+### markdown-organizer
+
+```bash
+# 1) 下载图片并美化格式
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdown.py <文件路径> [base_url]
+
+# 2) 基于文档内容增强（学习目标、前置知识、FAQ）
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/enhance_content.py --enhance <文件路径>
+```
+
+### url-to-markdown
+
+```bash
+# 1) URL 转 Markdown（含图片下载和格式美化）
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py <URL> [输出文件路径]
+
+# 2) 基于文档内容增强（学习目标、前置知识、FAQ）
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/enhance_content.py --enhance <输出文件路径>
+```
