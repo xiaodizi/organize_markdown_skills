@@ -59,6 +59,7 @@ TECH_STACK_KEYWORDS = {
     "api": ["API", "REST", "RESTful", "接口", "endpoint"],
     "auth": ["Auth", "认证", "授权", "JWT", "OAuth", "登录"],
     "cloud": ["云", "Cloud", "Serverless"],
+    "markdown": ["Markdown", "markdown"],
 }
 
 # 常见前置知识要求
@@ -103,6 +104,35 @@ PREREQUISITE_TEMPLATES = {
         "了解大语言模型的基本概念和使用方式",
         "具备一定的提示词（Prompt）编写经验",
     ],
+}
+
+STOP_WORDS = {
+    "如何",
+    "怎么",
+    "什么",
+    "教程",
+    "指南",
+    "入门",
+    "学习",
+    "使用",
+    "实战",
+    "完整",
+    "详细",
+    "快速",
+    "方案",
+    "方法",
+    "详解",
+    "介绍",
+    "文档",
+    "示例",
+    "example",
+    "guide",
+    "tutorial",
+    "learn",
+    "with",
+    "from",
+    "that",
+    "this",
 }
 
 
@@ -174,7 +204,7 @@ def analyze_document(file_path: str | Path) -> Dict:
             analysis["has_faq"] = True
 
     # 检测步骤模式
-    step_pattern = r"^\d+[.)]\s+|^步骤\s*\d+|^第\s*\d+\s*步"
+    step_pattern = r"^(?:#{1,6}\s*)?(?:\d+[.)]\s+|步骤\s*\d+|第\s*\d+\s*步)"
     for i, line in enumerate(lines):
         if re.search(step_pattern, line, re.IGNORECASE):
             analysis["steps"].append({"line": i + 1, "text": line.strip()})
@@ -286,6 +316,8 @@ def detect_prerequisites(content: str) -> Set[str]:
                     detected_prereqs.add("API 概念")
                 elif category == "docker":
                     detected_prereqs.add("Docker 基础")
+                elif category == "markdown":
+                    detected_prereqs.add("Markdown 语法")
                 break
 
     # 检测是否需要特定深度的基础知识
@@ -304,23 +336,22 @@ def generate_learning_objectives(
     objectives = []
     content_lower = content.lower()
 
-    # 从标题提取关键词
-    title_keywords = re.findall(r"\b\w+\b", title.lower())
-    main_topic = next(
-        (
-            w
-            for w in title_keywords
-            if len(w) > 3
-            and w not in ["如何", "怎么", "什么", "教程", "指南", "入门", "学习"]
-        ),
-        None,
-    )
+    def extract_topic_candidates(text: str) -> List[str]:
+        candidates = re.findall(r"[A-Za-z][A-Za-z0-9+._-]{2,}|[\u4e00-\u9fff]{2,8}", text)
+        return [
+            word
+            for word in candidates
+            if word.lower() not in STOP_WORDS and word not in STOP_WORDS
+        ]
+
+    # 从标题提取关键词（兼容中英文）
+    title_keywords = extract_topic_candidates(title)
+    main_topic = title_keywords[0] if title_keywords else None
 
     # 提取文档中的主要章节主题
     topic_words = []
-    for heading in headings[:5]:
-        words = re.findall(r"\b\w+\b", heading["text"].lower())
-        topic_words.extend([w for w in words if len(w) > 3])
+    for heading in headings[:6]:
+        topic_words.extend(extract_topic_candidates(heading["text"]))
 
     # 统计高频主题词
     topic_counter = Counter(topic_words)
@@ -371,7 +402,7 @@ def generate_learning_objectives(
 def generate_prerequisites_content(content: str, detected_prereqs: Set[str]) -> str:
     """生成个性化的前置知识内容"""
     lines = []
-    lines.append("\n## 前置知识")
+    lines.append("## 前置知识")
     lines.append("")
 
     if detected_prereqs:
@@ -387,6 +418,7 @@ def generate_prerequisites_content(content: str, detected_prereqs: Set[str]) -> 
 
     lines.append("")
     lines.append("如遇到不熟悉的概念，建议先补充相关基础知识再继续学习。")
+    lines.append("")
 
     return "\n".join(lines)
 
@@ -394,12 +426,72 @@ def generate_prerequisites_content(content: str, detected_prereqs: Set[str]) -> 
 def generate_learning_objectives_content(objectives: List[str]) -> str:
     """生成学习目标部分的 Markdown 内容"""
     lines = []
-    lines.append("\n## 学习目标")
+    lines.append("## 学习目标")
     lines.append("")
     lines.append("完成本教程后，您将能够：")
     lines.append("")
     for obj in objectives:
         lines.append(f"- {obj}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def generate_faq_content(content: str, analysis: Dict) -> str:
+    """根据文档内容生成 FAQ（避免固定模板）"""
+    title = analysis["title"] or "本文内容"
+
+    headings = [
+        h["text"]
+        for h in analysis["headings"]
+        if h["level"] <= 3
+        and all(k not in h["text"] for k in ["学习目标", "前置知识", "常见问题", "FAQ"])
+    ]
+    top_headings = headings[:3]
+
+    detected_prereqs = sorted(detect_prerequisites(content))
+    key_terms = extract_key_terms(content)[:3]
+    step_count = len(analysis["steps"])
+
+    lines = ["## 常见问题", ""]
+
+    lines.append("### 这篇文档建议按什么顺序学习？")
+    if top_headings:
+        lines.append(
+            "建议按以下顺序阅读并实践："
+            + " -> ".join(top_headings)
+            + "。"
+        )
+    else:
+        lines.append("建议先通读全文，再按章节中的示例逐步实践。")
+    lines.append("")
+
+    lines.append("### 开始实操前需要准备什么？")
+    if detected_prereqs:
+        lines.append("建议先准备这些基础：" + "、".join(detected_prereqs[:4]) + "。")
+    else:
+        lines.append("建议具备基础编程能力，并能使用命令行执行示例命令。")
+    lines.append("")
+
+    lines.append("### 实操过程中遇到问题怎么排查？")
+    if step_count > 0:
+        lines.append(
+            f"本文包含约 {step_count} 个操作步骤，建议逐步核对输入参数、环境版本和命令执行结果，优先定位首个报错点。"
+        )
+    else:
+        lines.append("建议先复现问题，再结合报错信息定位到对应章节进行排查。")
+    lines.append("")
+
+    lines.append(f"### 学完后如何验证自己掌握了《{title}》？")
+    if key_terms:
+        lines.append(
+            "可以尝试脱离文档，独立完成一个最小可运行示例，并正确使用这些关键点："
+            + "、".join(key_terms)
+            + "。"
+        )
+    else:
+        lines.append("可以尝试独立复现文档中的核心流程，并向他人解释关键步骤和原理。")
+    lines.append("")
+
     return "\n".join(lines)
 
 
@@ -457,6 +549,7 @@ def enhance_markdown_content(file_path: str | Path) -> str:
 
     if first_heading_match:
         heading_pos = first_heading_match.start()
+        prepend_sections = []
 
         # 如果缺少学习目标，生成个性化内容
         if not analysis["has_learning_objectives"]:
@@ -465,13 +558,7 @@ def enhance_markdown_content(file_path: str | Path) -> str:
                 content, analysis["title"], analysis["headings"]
             )
             learning_section = generate_learning_objectives_content(learning_objectives)
-
-            enhanced_content = (
-                enhanced_content[:heading_pos]
-                + learning_section
-                + enhanced_content[heading_pos:]
-            )
-            heading_pos += len(learning_section)
+            prepend_sections.append(learning_section)
 
         # 如果缺少前置知识，生成个性化内容
         if not analysis["has_prerequisites"]:
@@ -480,37 +567,23 @@ def enhance_markdown_content(file_path: str | Path) -> str:
             prerequisites_section = generate_prerequisites_content(
                 content, detected_prereqs
             )
+            prepend_sections.append(prerequisites_section)
 
+        if prepend_sections:
+            prepend_block = "\n".join(prepend_sections).rstrip() + "\n\n"
             enhanced_content = (
                 enhanced_content[:heading_pos]
-                + prerequisites_section
+                + prepend_block
                 + enhanced_content[heading_pos:]
             )
 
     # 如果有步骤但没有 FAQ，在末尾添加 FAQ
     if len(analysis["steps"]) > 0 and not analysis["has_faq"]:
-        faq_section = """
+        faq_section = generate_faq_content(content, analysis)
+        enhanced_content = enhanced_content.rstrip() + "\n\n" + faq_section
 
-## 常见问题
-
-### 如何开始使用？
-
-请按照文档中的步骤顺序进行操作。如有疑问，可参考每节中的详细说明。
-
-### 遇到错误怎么办？
-
-1. 检查步骤是否正确执行
-2. 确认环境配置是否正确
-3. 查看错误信息并搜索解决方案
-
-### 如何获取更多帮助？
-
-- 参考相关官方文档
-- 在社区中提问
-- 查看示例代码
-
-"""
-        enhanced_content += faq_section
+    # 确保文件以换行结束，避免标题渲染异常
+    enhanced_content = enhanced_content.rstrip("\n") + "\n"
 
     return enhanced_content
 
