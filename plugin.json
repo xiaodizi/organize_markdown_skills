@@ -5,7 +5,16 @@
   "author": {
     "name": "lei.fu"
   },
-  "keywords": ["markdown", "organize", "images", "beautify", "npm", "npx", "url", "webpage"],
+  "keywords": [
+    "markdown",
+    "organize",
+    "images",
+    "beautify",
+    "npm",
+    "npx",
+    "url",
+    "webpage"
+  ],
   "homepage": "https://github.com/xiaodizi/organize_markdown_skills",
   "repository": "https://github.com/xiaodizi/organize_markdown_skills.git"
 }
