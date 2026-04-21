@@ -87,8 +87,15 @@ published: 2026-04-21
 - 包括：基础语言、框架、工具、概念等
 
 **▌ 知识图谱**
-- 基于文档内容生成 Mermaid mindmap 或 graph
+- 基于文档内容生成 Mermaid mindmap 或简单 flowchart
 - 展现文档的核心概念及其关系
+- **Mermaid 语法规范**（确保 Obsidian 兼容）：
+  - 优先使用 `mindmap` 格式（最兼容）
+  - 如使用 `graph TD` 或 `flowchart TD`，只使用基础节点形状：
+    - `[文本]` - 矩形框
+    - `(文本)` - 圆角矩形
+    - `{文本}` - 菱形
+  - **不要使用**：`[/text]`、`[\text]`、`([text])`、`{{text}}` 等复杂形状
 - 格式：```` ```mermaid ... ``` ````
 - 包含 3-5 个主要章节和关键概念的层级关系
 
