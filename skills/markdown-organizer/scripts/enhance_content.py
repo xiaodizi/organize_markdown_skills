@@ -381,7 +381,9 @@ def generate_learning_objectives(
     content_lower = content.lower()
 
     def extract_topic_candidates(text: str) -> List[str]:
-        candidates = re.findall(r"[A-Za-z][A-Za-z0-9+._-]{2,}|[\u4e00-\u9fff]{2,8}", text)
+        candidates = re.findall(
+            r"[A-Za-z][A-Za-z0-9+._-]{2,}|[\u4e00-\u9fff]{2,8}", text
+        )
         return [
             word
             for word in candidates
@@ -454,12 +456,16 @@ def generate_prerequisites_content(content: str, detected_prereqs: Set[str]) -> 
         lines.append("")
         prioritized = sorted(
             detected_prereqs,
-            key=lambda x: PREREQUISITE_PRIORITY.index(x)
-            if x in PREREQUISITE_PRIORITY
-            else len(PREREQUISITE_PRIORITY),
+            key=lambda x: (
+                PREREQUISITE_PRIORITY.index(x)
+                if x in PREREQUISITE_PRIORITY
+                else len(PREREQUISITE_PRIORITY)
+            ),
         )
         for prereq in prioritized[:6]:
-            description = PREREQUISITE_DESCRIPTIONS.get(prereq, "建议具备相关基础后再开始实操。")
+            description = PREREQUISITE_DESCRIPTIONS.get(
+                prereq, "建议具备相关基础后再开始实操。"
+            )
             lines.append(f"- **{prereq}**：{description}")
     else:
         lines.append("本文档假设您具备以下基础知识：")
@@ -507,11 +513,7 @@ def generate_faq_content(content: str, analysis: Dict) -> str:
 
     lines.append("### 这篇文档建议按什么顺序学习？")
     if top_headings:
-        lines.append(
-            "建议按以下顺序阅读并实践："
-            + " -> ".join(top_headings)
-            + "。"
-        )
+        lines.append("建议按以下顺序阅读并实践：" + " -> ".join(top_headings) + "。")
     else:
         lines.append("建议先通读全文，再按章节中的示例逐步实践。")
     lines.append("")
@@ -544,6 +546,14 @@ def generate_faq_content(content: str, analysis: Dict) -> str:
     lines.append("")
 
     return "\n".join(lines)
+
+
+def find_insert_position_below_frontmatter(content: str) -> int | None:
+    """返回 frontmatter 结束后的插入位置（若不存在则返回 None）。"""
+    frontmatter_match = re.match(r"\A---\s*\n.*?\n---\s*(?:\n|\Z)", content, re.DOTALL)
+    if frontmatter_match:
+        return frontmatter_match.end()
+    return None
 
 
 def generate_enhanced_content(file_path: str | Path) -> str:
@@ -595,38 +605,40 @@ def enhance_markdown_content(file_path: str | Path) -> str:
     analysis = analyze_document(file_path)
     enhanced_content = content
 
-    # 找到第一个标题的位置（用于插入学习目标和前置知识）
-    first_heading_match = re.search(r"^#{1,6}\s+.+$", content, re.MULTILINE)
+    # 找到插入位置：优先放在 frontmatter（文档属性）之后，否则放在首个标题前
+    insert_pos = find_insert_position_below_frontmatter(content)
+    if insert_pos is None:
+        first_heading_match = re.search(r"^#{1,6}\s+.+$", content, re.MULTILINE)
+        if first_heading_match:
+            insert_pos = first_heading_match.start()
 
-    if first_heading_match:
-        heading_pos = first_heading_match.start()
-        prepend_sections = []
+    prepend_sections = []
 
-        # 如果缺少学习目标，生成个性化内容
-        if not analysis["has_learning_objectives"]:
-            # 根据文档实际内容生成个性化的学习目标
-            learning_objectives = generate_learning_objectives(
-                content, analysis["title"], analysis["headings"]
-            )
-            learning_section = generate_learning_objectives_content(learning_objectives)
-            prepend_sections.append(learning_section)
+    # 如果缺少学习目标，生成个性化内容
+    if not analysis["has_learning_objectives"]:
+        # 根据文档实际内容生成个性化的学习目标
+        learning_objectives = generate_learning_objectives(
+            content, analysis["title"], analysis["headings"]
+        )
+        learning_section = generate_learning_objectives_content(learning_objectives)
+        prepend_sections.append(learning_section)
 
-        # 如果缺少前置知识，生成个性化内容
-        if not analysis["has_prerequisites"]:
-            # 根据文档内容检测需要的前置知识
-            detected_prereqs = detect_prerequisites(content)
-            prerequisites_section = generate_prerequisites_content(
-                content, detected_prereqs
-            )
-            prepend_sections.append(prerequisites_section)
+    # 如果缺少前置知识，生成个性化内容
+    if not analysis["has_prerequisites"]:
+        # 根据文档内容检测需要的前置知识
+        detected_prereqs = detect_prerequisites(content)
+        prerequisites_section = generate_prerequisites_content(
+            content, detected_prereqs
+        )
+        prepend_sections.append(prerequisites_section)
 
-        if prepend_sections:
-            prepend_block = "\n".join(prepend_sections).rstrip() + "\n\n"
-            enhanced_content = (
-                enhanced_content[:heading_pos]
-                + prepend_block
-                + enhanced_content[heading_pos:]
-            )
+    if prepend_sections and insert_pos is not None:
+        prepend_block = "\n".join(prepend_sections).rstrip() + "\n\n"
+        enhanced_content = (
+            enhanced_content[:insert_pos]
+            + prepend_block
+            + enhanced_content[insert_pos:]
+        )
 
     # 如果有步骤但没有 FAQ，在末尾添加 FAQ
     if len(analysis["steps"]) > 0 and not analysis["has_faq"]:
