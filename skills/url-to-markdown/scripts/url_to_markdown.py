@@ -20,8 +20,8 @@ from pathlib import Path
 import requests
 
 
-def sanitize_filename(url: str) -> str:
-    """根据 URL 生成安全的文件名"""
+def sanitize_filename(url: str, prefix: str = "") -> str:
+    """根据 URL 生成安全的文件名，可选前缀"""
     parsed = urllib.parse.urlparse(url)
     path = parsed.path
 
@@ -30,13 +30,21 @@ def sanitize_filename(url: str) -> str:
         ext = ".jpg"
 
     url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()[:12]
+    
+    if prefix:
+        # 清理前缀中的非法字符，保留字母、数字、中文和下划线
+        prefix = re.sub(r"[^\w\u4e00-\u9fff-]", "_", prefix).strip("_")
+        if len(prefix) > 30:
+            prefix = prefix[:30]
+        return f"{prefix}_{url_hash}{ext}"
+    
     return f"{url_hash}{ext}"
 
 
-def download_image(url: str, img_dir: Path) -> str | None:
-    """下载图片到本地目录"""
+def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
+    """下载图片到本地目录，可选前缀"""
     try:
-        filename = sanitize_filename(url)
+        filename = sanitize_filename(url, prefix=prefix)
         local_path = img_dir / filename
 
         if local_path.exists():
@@ -59,8 +67,8 @@ def download_image(url: str, img_dir: Path) -> str | None:
         return None
 
 
-def extract_and_download_images(content: str, base_url: str, img_dir: Path) -> str:
-    """提取并下载图片，返回更新后的内容"""
+def extract_and_download_images(content: str, base_url: str, img_dir: Path, prefix: str = "") -> str:
+    """提取并下载图片，返回更新后的内容。可选前缀用于图片文件名"""
     img_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
 
     def replace_image(match):
@@ -80,7 +88,7 @@ def extract_and_download_images(content: str, base_url: str, img_dir: Path) -> s
                 img_url = urllib.parse.urljoin(base_url, img_url)
 
         print(f"\n📥 处理图片: {img_url[:80]}{'...' if len(img_url) > 80 else ''}")
-        filename = download_image(img_url, img_dir)
+        filename = download_image(img_url, img_dir, prefix=prefix)
 
         if filename:
             return f"![{alt_text}](./img/{filename})"
@@ -389,8 +397,15 @@ def url_to_markdown(
     print(f"\n📁 工作目录: {work_dir}")
     print(f"📁 图片目录: {img_dir}")
 
+    # 从文档标题中提取前缀（第一个 # 标题）
+    title_prefix = ""
+    title_match = re.search(r"^#\s+(.+)$", markdown, re.MULTILINE)
+    if title_match:
+        title_prefix = title_match.group(1).strip()
+        print(f"📌 图片前缀: {title_prefix}")
+
     print("\n🔍 搜索并下载图片...")
-    markdown = extract_and_download_images(markdown, base_url, img_dir)
+    markdown = extract_and_download_images(markdown, base_url, img_dir, prefix=title_prefix)
 
     print("\n✨ 美化 Markdown 格式...")
     markdown = beautify_markdown(markdown)
