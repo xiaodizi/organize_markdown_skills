@@ -261,7 +261,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
     此函数将它们合并，保留所有有价值的属性（特别是 tags 等）。
     """
     lines = content.split("\n")
-    
+
     # 找到所有 frontmatter 块的位置
     frontmatter_blocks = []
     i = 0
@@ -282,16 +282,16 @@ def remove_duplicate_frontmatter(content: str) -> str:
                 break
         else:
             i += 1
-    
+
     if len(frontmatter_blocks) <= 1:
         # 没有重复的 frontmatter，直接返回
         return content
-    
+
     # 有多个 frontmatter 块，需要合并
     print(f"  ℹ️ 检测到 {len(frontmatter_blocks)} 个 frontmatter 块，尝试合并...")
-    
+
     merged_data = {}
-    
+
     # 逐个解析并合并每个 frontmatter 块
     for block_idx, (start, end) in enumerate(frontmatter_blocks):
         frontmatter_text = "\n".join(lines[start + 1 : end])
@@ -302,7 +302,9 @@ def remove_duplicate_frontmatter(content: str) -> str:
                 for key, value in data.items():
                     if key not in merged_data:
                         merged_data[key] = value
-                    elif isinstance(value, list) and isinstance(merged_data.get(key), list):
+                    elif isinstance(value, list) and isinstance(
+                        merged_data.get(key), list
+                    ):
                         # 如果都是列表，去重后合并（保留顺序）
                         merged_list = list(merged_data[key])
                         for item in value:
@@ -311,8 +313,10 @@ def remove_duplicate_frontmatter(content: str) -> str:
                         merged_data[key] = merged_list
                     # 否则保留第一个块的值
         except yaml.YAMLError as e:
-            print(f"    ⚠️ 第 {block_idx + 1} 个 frontmatter 块解析失败: {str(e)[:30]}...")
-    
+            print(
+                f"    ⚠️ 第 {block_idx + 1} 个 frontmatter 块解析失败: {str(e)[:30]}..."
+            )
+
     # 重新生成 frontmatter
     new_frontmatter_text = yaml.dump(
         merged_data,
@@ -320,17 +324,17 @@ def remove_duplicate_frontmatter(content: str) -> str:
         allow_unicode=True,
         sort_keys=False,
     ).rstrip()
-    
+
     # 构建新内容：只保留第一个 frontmatter 块的位置，用合并后的数据替换
     first_start, first_end = frontmatter_blocks[0]
-    
+
     # 删除所有其他 frontmatter 块
     result_lines = []
     result_lines.extend(lines[:first_start])  # 第一个 frontmatter 之前的内容
     result_lines.append("---")
     result_lines.extend(new_frontmatter_text.split("\n"))
     result_lines.append("---")
-    
+
     # 从第一个 frontmatter 之后开始添加内容
     i = first_end + 1
     while i < len(lines):
@@ -351,15 +355,19 @@ def remove_duplicate_frontmatter(content: str) -> str:
         else:
             result_lines.append(lines[i])
             i += 1
-    
+
     result = "\n".join(result_lines)
-    
+
     duplicate_count = len(frontmatter_blocks) - 1
     print(f"  ✅ 已合并 {duplicate_count} 个 frontmatter 块")
     if "tags" in merged_data:
-        tags_str = ", ".join(merged_data["tags"]) if isinstance(merged_data["tags"], list) else str(merged_data["tags"])
+        tags_str = (
+            ", ".join(merged_data["tags"])
+            if isinstance(merged_data["tags"], list)
+            else str(merged_data["tags"])
+        )
         print(f"    📌 保留了 tags 属性: [{tags_str}]")
-    
+
     return result
 
 
