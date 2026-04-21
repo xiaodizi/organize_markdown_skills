@@ -51,9 +51,20 @@ def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
         filename = sanitize_filename(url, prefix=prefix)
         local_path = img_dir / filename
 
-        # 如果文件已存在，直接返回
+        # 优先检查带前缀的文件名
         if local_path.exists():
+            print(f"  ℹ️ 文件已存在: {filename}")
             return filename
+
+        # 如果带前缀的文件不存在，检查无前缀的旧文件
+        if prefix:
+            filename_without_prefix = sanitize_filename(url, prefix="")
+            old_path = img_dir / filename_without_prefix
+            if old_path.exists():
+                print(f"  ℹ️ 使用已存在的文件: {filename_without_prefix}")
+                # 文件存在但没有前缀，返回旧的文件名用于引用
+                # 这样至少图片不会损坏
+                return filename_without_prefix
 
         # 下载图片
         headers = {
@@ -190,6 +201,56 @@ def extract_title_from_frontmatter(content: str) -> str:
         print(f"  ⚠️ 提取 title 失败: {e}")
 
     return ""
+
+
+def clean_duplicate_metadata(content: str) -> str:
+    """
+    清理 frontmatter 中的重复元数据
+
+    当 title 被提取并生成为一级标题后，frontmatter 中的 title 字段就成了重复的
+    此函数删除 frontmatter 中的 title 字段
+    """
+    try:
+        frontmatter_match = re.match(
+            r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
+        )
+        if not frontmatter_match:
+            return content
+
+        frontmatter_text = frontmatter_match.group(1)
+        end_pos = frontmatter_match.end()
+
+        # 解析 YAML
+        frontmatter_data = yaml.safe_load(frontmatter_text)
+
+        if not frontmatter_data or not isinstance(frontmatter_data, dict):
+            return content
+
+        # 如果没有 title 字段，直接返回
+        if "title" not in frontmatter_data:
+            return content
+
+        # 删除 title 字段
+        del frontmatter_data["title"]
+
+        # 重新生成 frontmatter
+        new_frontmatter_text = yaml.dump(
+            frontmatter_data,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+        ).rstrip()
+
+        # 构建新内容
+        rest_content = content[end_pos:]
+        new_content = f"---\n{new_frontmatter_text}\n---\n{rest_content}"
+
+        print("  ✅ 已删除重复的 title 字段")
+        return new_content
+
+    except Exception as e:
+        print(f"  ⚠️ 清理元数据失败: {e}")
+        return content
 
 
 def fix_yaml_frontmatter(content: str) -> str:
@@ -369,6 +430,10 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     # 修复 YAML frontmatter 格式问题
     print("\n🔧 检查 YAML 格式...")
     content = fix_yaml_frontmatter(content)
+
+    # 清理重复的元数据（删除 frontmatter 中的 title 字段）
+    print("\n🧹 清理重复元数据...")
+    content = clean_duplicate_metadata(content)
 
     # 提取并下载图片
     print("\n🔍 搜索并下载图片...")
