@@ -209,6 +209,186 @@ def extract_title_from_frontmatter(content: str) -> str:
     return ""
 
 
+def ensure_h1_title(content: str) -> str:
+    """
+    确保文档有一级标题 (# 标题)
+    
+    如果没有一级标题，从 frontmatter 的 title 字段生成
+    这是处理 Web Clipper 元数据的一部分
+    """
+    # 检查是否已经有一级标题
+    if re.search(r"^#\s+", content, re.MULTILINE):
+        return content
+    
+    # 检查是否有 frontmatter
+    frontmatter_match = re.match(
+        r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
+    )
+    
+    if not frontmatter_match:
+        # 没有 frontmatter，无法生成标题
+        return content
+    
+    # 从 frontmatter 提取 title
+    frontmatter_text = frontmatter_match.group(1)
+    try:
+        frontmatter_data = yaml.safe_load(frontmatter_text)
+        if not isinstance(frontmatter_data, dict):
+            return content
+        
+        title = frontmatter_data.get("title", "").strip()
+        if not title or title == "未命名":
+            # title 无意义，无法生成一级标题
+            return content
+        
+        # 在 frontmatter 后插入一级标题
+        end_pos = frontmatter_match.end()
+        h1_line = f"\n# {title}\n"
+        
+        result = content[:end_pos] + h1_line + content[end_pos:]
+        print(f"  ✅ 从 title 生成一级标题: # {title}")
+        return result
+    except Exception as e:
+        print(f"  ⚠️ 生成一级标题失败: {e}")
+        return content
+
+
+def ensure_h1_title_after_enhancements(content: str) -> str:
+    """
+    确保文档有一级标题，位置在所有增强内容块之后
+    
+    增强内容块包括：## 学习目标，## 前置知识，## 摘要，## 常见问题 等
+    
+    如果没有一级标题，从 frontmatter 的 title 字段生成并插入在合适位置
+    """
+    # 检查是否已经有一级标题
+    if re.search(r"^# \S", content, re.MULTILINE):
+        return content
+    
+    # 检查是否有 frontmatter
+    frontmatter_match = re.match(
+        r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
+    )
+    
+    if not frontmatter_match:
+        return content
+    
+    # 从 frontmatter 提取 title
+    frontmatter_text = frontmatter_match.group(1)
+    try:
+        frontmatter_data = yaml.safe_load(frontmatter_text)
+        if not isinstance(frontmatter_data, dict):
+            return content
+        
+        title = frontmatter_data.get("title", "").strip()
+        if not title or title == "未命名":
+            return content
+        
+        lines = content.split('\n')
+        frontmatter_end_line = content[:frontmatter_match.end()].count('\n')
+        
+        # 已知的增强内容块标题
+        enhancement_headers = {
+            "## 学习目标",
+            "## 前置知识",
+            "## 前置条件",
+            "## 摘要",
+            "## 概述",
+            "## 常见问题",
+            "## FAQ",
+            "## 知识图谱",
+        }
+        
+        # 查找所有增强块的行号
+        enhancement_lines = []
+        last_seen_header = None
+        last_seen_header_line = -1
+        
+        for i in range(frontmatter_end_line + 1, len(lines)):
+            line = lines[i]
+            
+            if line.strip().startswith("## "):
+                # 这是一个 ## 块
+                is_known_enhancement = any(
+                    line.strip().startswith(h.strip()) for h in enhancement_headers
+                )
+                
+                if is_known_enhancement:
+                    # 这是一个已知的增强块
+                    enhancement_lines.append(i)
+                    last_seen_header = line
+                    last_seen_header_line = i
+                else:
+                    # 这是一个未知的 ## 块，说明原始内容开始了
+                    break
+        
+        # 如果没有找到增强块，使用默认位置
+        if not enhancement_lines:
+            # 在第一个非空行前插入
+            insert_line = frontmatter_end_line + 1
+            for i in range(frontmatter_end_line + 1, len(lines)):
+                if lines[i].strip():
+                    insert_line = i
+                    break
+        else:
+            # 在最后一个增强块之后找到合适的插入点
+            last_enhancement_header_line = enhancement_lines[-1]
+            insert_line = last_enhancement_header_line + 1
+            
+            # 从该块开始，找到内容真正结束的位置
+            for i in range(last_enhancement_header_line + 1, len(lines)):
+                line = lines[i]
+                
+                # 空行继续
+                if not line.strip():
+                    insert_line = i + 1
+                    continue
+                
+                # ### 子标题属于该块
+                if line.startswith("### "):
+                    insert_line = i + 1
+                    continue
+                
+                # 如果遇到其他 ## 或 #，说明新块开始了
+                if line.startswith("#"):
+                    break
+                
+                # 列表项、缩进的内容属于该块
+                if line.startswith("  ") or line.startswith("- ") or line.startswith("* ") or line.startswith("1. "):
+                    insert_line = i + 1
+                    continue
+                
+                # 其他非空行可能是增强块的内容或原始文档的开始
+                # 为了安全，我们假设任何非特殊格式的非空行都是内容的延续
+                # 直到遇到下一个块标题或遇到真正的文档内容段落
+                # 这里简化处理：只有当连续遇到真实段落时才认为块结束
+                # 但这很难判断...
+                # 所以我们直接让块在这里结束
+                break
+        
+        # 计算插入位置的字符位置
+        insert_pos = 0
+        for i in range(insert_line):
+            if i < len(lines):
+                insert_pos += len(lines[i]) + 1
+        
+        h1_line = f"# {title}\n"
+        
+        # 检查是否需要在前面添加空行
+        if insert_pos > 0 and content[insert_pos - 1:insert_pos] == '\n':
+            # 前面已经有newline，检查是否需要额外空行
+            if insert_pos > 1 and content[insert_pos - 2:insert_pos - 1] != '\n':
+                h1_line = f"\n{h1_line}"
+        
+        result = content[:insert_pos] + h1_line + content[insert_pos:]
+        print(f"  ✅ 在增强内容后生成一级标题: # {title}")
+        return result
+        
+    except Exception as e:
+        print(f"  ⚠️ 生成一级标题失败: {e}")
+        return content
+
+
 def clean_duplicate_metadata(content: str) -> str:
     """
     清理 frontmatter 中的重复元数据
@@ -276,7 +456,7 @@ def clean_duplicate_metadata(content: str) -> str:
 def identify_frontmatter_type(data: dict) -> str:
     """
     识别 frontmatter 块的类型
-    
+
     返回值：
     - "obsidian": Obsidian 笔记属性（包含 aliases、up、related、summary 等特定字段）
     - "web_clipper": Web Clipper 元数据（包含 source、author、published 等）
@@ -286,11 +466,11 @@ def identify_frontmatter_type(data: dict) -> str:
     obsidian_fields = {"aliases", "up", "related", "summary", "updated"}
     # Web Clipper 特定字段
     web_clipper_fields = {"source", "author", "published", "description"}
-    
+
     data_keys = set(data.keys())
     has_obsidian_fields = bool(data_keys & obsidian_fields)
     has_web_clipper_fields = bool(data_keys & web_clipper_fields)
-    
+
     if has_obsidian_fields and not has_web_clipper_fields:
         return "obsidian"
     elif has_web_clipper_fields and not has_obsidian_fields:
@@ -351,31 +531,37 @@ def remove_duplicate_frontmatter(content: str) -> str:
             data = yaml.safe_load(frontmatter_text)
             if isinstance(data, dict):
                 block_type = identify_frontmatter_type(data)
-                frontmatter_info.append({
-                    "index": block_idx,
-                    "start": start,
-                    "end": end,
-                    "type": block_type,
-                    "data": data
-                })
+                frontmatter_info.append(
+                    {
+                        "index": block_idx,
+                        "start": start,
+                        "end": end,
+                        "type": block_type,
+                        "data": data,
+                    }
+                )
                 print(f"    块 {block_idx + 1}: {block_type}")
             else:
-                frontmatter_info.append({
+                frontmatter_info.append(
+                    {
+                        "index": block_idx,
+                        "start": start,
+                        "end": end,
+                        "type": "invalid",
+                        "data": {},
+                    }
+                )
+        except yaml.YAMLError as e:
+            print(f"    ⚠️ 块 {block_idx + 1} 解析失败: {str(e)[:30]}...")
+            frontmatter_info.append(
+                {
                     "index": block_idx,
                     "start": start,
                     "end": end,
                     "type": "invalid",
-                    "data": {}
-                })
-        except yaml.YAMLError as e:
-            print(f"    ⚠️ 块 {block_idx + 1} 解析失败: {str(e)[:30]}...")
-            frontmatter_info.append({
-                "index": block_idx,
-                "start": start,
-                "end": end,
-                "type": "invalid",
-                "data": {}
-            })
+                    "data": {},
+                }
+            )
 
     # 找到 obsidian 块和 web_clipper 块
     obsidian_block = None
@@ -385,7 +571,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
             obsidian_block = info
         elif info["type"] in ["web_clipper", "mixed"]:
             web_clipper_blocks.append(info)
-    
+
     # 如果没找到 obsidian 块，使用第一个块
     if obsidian_block is None and frontmatter_info:
         obsidian_block = frontmatter_info[0]
@@ -396,7 +582,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
 
     # 合并所有数据到 obsidian 块
     merged_data = dict(obsidian_block["data"])
-    
+
     for clipper_block in web_clipper_blocks:
         for key, value in clipper_block["data"].items():
             if key not in merged_data:
@@ -405,7 +591,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
                 # 对于 title 字段，智能选择：优先使用有意义的
                 existing_title = str(merged_data.get(key, "")).strip()
                 new_title = str(value).strip() if value else ""
-                
+
                 # 如果现有 title 无意义（"未命名"或空），则使用新的
                 if not existing_title or existing_title == "未命名":
                     if new_title and new_title != "未命名":
@@ -668,7 +854,7 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    # 调用 enhance_content.py 进行内容增强
+    # 调用 enhance_content.py 进行内容增强（先生成增强内容）
     print("\n📝 内容增强...")
     script_dir = Path(__file__).parent
     enhance_script = script_dir / "enhance_content.py"
@@ -687,6 +873,16 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
             print(f"  ⚠️ 内容增强跳过: {e}")
     else:
         print("  ⚠️ enhance_content.py 未找到，跳过内容增强")
+    
+    # 处理 Web Clipper 元数据：确保有一级标题（放在最后，在所有增强内容之后）
+    print("\n📝 处理 Web Clipper 元数据...")
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    content = ensure_h1_title_after_enhancements(content)
+    
+    # 写回文件
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
 
     print("\n✅ 完成！")
 

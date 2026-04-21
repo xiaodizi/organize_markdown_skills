@@ -29,42 +29,6 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 
 当你执行此命令时，Claude **完全自动执行**以下所有步骤，**无需任何用户确认**：
 
-### 步骤 0：处理 Web Clipper 元数据（可选）
-
-如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
-
-1. **合并 frontmatter**：
-   - 识别 YAML frontmatter 中的 Web Clipper 属性（`title`、`source`、`author`、`published` 等）
-   - 将这些属性与文档现有的 frontmatter 合并
-   - 如果现有 frontmatter 已有相同字段，以现有内容为准
-   - 保留 `title` 字段在 frontmatter 中
-
-2. **生成文档一级标题**：
-   - 在 frontmatter 结束（`---`）之后插入一个空行
-   - 然后插入 `# {title字段内容}` 作为文档的一级标题
-   - 例如：如果 title 是 "AI Knowledge Layer"，则插入 `# AI Knowledge Layer`
-
-3. **清理**：
-   - 删除已处理的 Web Clipper 临时元数据部分（如果有）
-   - 确保标题和后面的内容之间有一个空行
-
-**文件结构示例**：
-```
----
-title: AI Knowledge Layer
-source: https://example.com
-author: Author Name
-published: 2026-04-21
----
-
-# AI Knowledge Layer
-
-## 摘要
-...
-```
-
-**注意**：如果文档没有 Web Clipper 元数据或没有 `title` 字段，直接跳过此步骤。
-
 ### 步骤 1：读取并分析文档
 
 1. 读取原始 markdown 文件
@@ -132,28 +96,74 @@ published: 2026-04-21
    - 确保文件末尾有换行符
    - **立即将修改保存到文件**
 
-### 步骤 4：处理图片和格式
+### 步骤 4：处理图片、格式和 Web Clipper 元数据
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdown.py {file_path} [base_url]
 ```
 
-这一步自动完成：
+这一步自动完成以下所有操作（必选项）：
+
+**Part A：处理 Web Clipper 元数据**
+- 🔍 **合并多个 frontmatter 块**：将 Obsidian 笔记属性和 Web Clipper 元数据智能合并
+- 📌 **生成一级标题**：如果文档缺少一级标题（`# 标题`），自动从 frontmatter 的 `title` 字段生成
+- 📋 **保留所有属性**：完整保留所有笔记属性和 Web Clipper 元数据（title、source、author、tags 等）
+
+**Part B：处理图片和格式**  
 - ⬇️ 下载图片到本地 `img/` 文件夹
 - 🔗 更新 markdown 中的图片引用为本地路径
 - ✨ 美化 markdown 格式（标题、列表、空行等）
-- **💾 回填并保存所有笔记属性到文件**（包括 frontmatter、增强内容、图片引用等）
 
-### 步骤 5：验证并报告（自动执行，无需用户交互）
+**Part C：保存和验证**
+- 💾 **回填并保存所有笔记属性到文件**（包括 frontmatter、增强内容、图片引用等）
+- ✓ 确保文件末尾有换行符
+
+**处理示例**：
+
+输入（Web Clipper + Obsidian）：
+```
+---
+title: 未命名
+aliases: []
+tags: [知识库/AI]
+updated: 2026-04-21
+---
+---
+title: "AI Knowledge Layer..."
+source: "https://..."
+author: ["Author"]
+published: 2026-04-14
+tags: [clippings]
+---
+
+[文档内容...]
+```
+
+输出（合并后）：
+```
+---
+title: AI Knowledge Layer...
+source: https://...
+author: ["Author"]
+published: 2026-04-14
+tags: [知识库/AI, clippings]
+aliases: []
+updated: 2026-04-21
+---
+
+# AI Knowledge Layer...
+
+[文档内容...]
+```
+
+### 步骤 5：Claude 验证并报告（自动执行）
 
 脚本执行完成后，Claude 自动进行最终验证和报告（不需要任何用户确认）：
 
 1. **验证脚本执行结果**：
    - ✓ 确认文件已成功保存
    - ✓ 验证 frontmatter 属性已正确合并和保存
-   - ✓ 检查是否存在一级标题（`# ` 开头）：
-     - 如果**存在**：验证一级标题正确（如果是从 Web Clipper 转换来的，这已经在步骤 0-4 中完成）
-     - 如果**不存在**：从 frontmatter 的 `title` 字段读取内容，在笔记属性下方插入 `# {title}` 作为一级标题，然后保存文件
+   - ✓ 验证一级标题（`# ` 开头）已存在或已自动生成
    - ✓ 确认增强内容都基于文档实际内容
    - ✓ 确认没有重复的摘要（如文档已有 "## 摘要" 或 "## 概述"，应已跳过）
    - ✓ 检查 Markdown 格式正确无误
@@ -165,15 +175,15 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
    - 📋 报告已合并的 frontmatter 属性（如 tags、categories 等）
    - 📌 报告一级标题情况（已存在 / 新创建 + 标题内容）
    - ✅ 确认文件已保存的路径及最后修改时间
-   - 📊 简要说明处理结果的质量检查结果
 
 **重要**：不要询问用户是否需要"预览"或"diff"，直接完成并显示简明报告即可。
 
 ## 执行要点
 
-1. **完全自动执行**：无需中途确认，所有步骤自动完成（步骤 0-5）
+1. **完全自动执行**：无需中途确认，所有步骤自动完成（步骤 1-5）
 2. **内容质量优先**：每一句都要有意义，基于文档实际内容，不要生成虚假或不相关的信息
 3. **语言风格**：与原文保持一致，用中文表述
 4. **难度匹配**：学习目标和前置知识要与文档难度相匹配
 5. **位置正确**：增强内容必须在文档顶部（frontmatter 下方），其他原文顺序不变
-6. **不要做**：不要修改原文内容，只在指定位置添加新内容
+6. **Web Clipper 必选**：frontmatter 合并、一级标题生成、属性保留都是必选项
+7. **不要做**：不要修改原文内容，只在指定位置添加新内容
