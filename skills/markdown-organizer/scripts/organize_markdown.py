@@ -164,20 +164,20 @@ def resolve_file_path(file_path: str | Path) -> Path:
 def fix_yaml_frontmatter(content: str) -> str:
     """
     检测并修复 YAML frontmatter 中的缩进问题
-    
+
     常见问题：
     - 列表项缩进不一致，导致列表项无法被正确识别
     - 例如：tags 列表的最后一项没有正确缩进到 tags 键下
-    
+
     返回修复后的内容
     """
     # 检测 frontmatter 部分
     frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL)
     if not frontmatter_match:
         return content
-    
+
     frontmatter_text = frontmatter_match.group(1)
-    
+
     # 尝试解析 YAML，看是否有错误
     try:
         yaml.safe_load(frontmatter_text)
@@ -186,10 +186,10 @@ def fix_yaml_frontmatter(content: str) -> str:
     except yaml.YAMLError as e:
         # YAML 解析失败，尝试自动修复
         print(f"  ⚠️ 检测到 YAML 格式问题: {str(e)[:50]}...")
-        
+
         # 修复策略：规范化缩进
         fixed_frontmatter = fix_yaml_indentation(frontmatter_text)
-        
+
         # 验证修复后的格式
         try:
             yaml.safe_load(fixed_frontmatter)
@@ -206,36 +206,36 @@ def fix_yaml_frontmatter(content: str) -> str:
 def fix_yaml_indentation(frontmatter_text: str) -> str:
     """
     修复 YAML frontmatter 的缩进问题
-    
+
     主要问题：列表项缩进不一致
     例如：
     tags:
       - item1
       - item2
     - item3  # 这行缩进错误，应该缩进到 tags 下
-    
+
     修复方法：
     1. 识别键值对的缩进级别
     2. 确保该键对应的列表项都有相同的缩进
     """
     lines = frontmatter_text.split("\n")
     fixed_lines = []
-    
+
     # 追踪当前的缩进上下文
     key_indents = {}  # 记录每个键的缩进级别
     current_key = None
     current_indent = 0
-    
+
     for line in lines:
         if not line.strip():
             # 空行保持原样
             fixed_lines.append(line)
             continue
-        
+
         # 计算当前行的缩进
         indent = len(line) - len(line.lstrip())
         stripped = line.lstrip()
-        
+
         # 检测键值对（key:）
         if re.match(r"^[^:\s]+:\s*", stripped):
             key = re.match(r"^([^:]+):", stripped).group(1).strip()
@@ -243,13 +243,13 @@ def fix_yaml_indentation(frontmatter_text: str) -> str:
             current_indent = indent
             key_indents[key] = indent
             fixed_lines.append(line)
-        
+
         # 检测列表项（- item）
         elif stripped.startswith("-"):
             if current_key and current_indent is not None:
                 # 列表项应该缩进在其所属键下
                 expected_indent = current_indent + 2
-                
+
                 # 如果缩进不对，修正它
                 if indent != expected_indent and indent <= current_indent:
                     # 这是一个缩进错误的列表项
@@ -262,7 +262,7 @@ def fix_yaml_indentation(frontmatter_text: str) -> str:
         else:
             # 其他行保持原样
             fixed_lines.append(line)
-    
+
     return "\n".join(fixed_lines)
 
 
@@ -378,11 +378,14 @@ def show_help():
     print("")
     print("参数:")
     print("  <markdown文件>      输入 Markdown 文件路径 (必填)")
-    print("  [base_url]          基础 URL，用于处理相对路径图片（可选，当图片链接是相对路径时需要提供原网页 URL）")
+    print(
+        "  [base_url]          基础 URL，用于处理相对路径图片（可选，当图片链接是相对路径时需要提供原网页 URL）"
+    )
     print("")
     print("示例:")
     print("  markdown-organizer article.md")
     print("  markdown-organizer article.md https://example.com/article")
+
 
 def main():
     """命令行入口"""
