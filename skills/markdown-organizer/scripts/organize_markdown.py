@@ -212,39 +212,37 @@ def extract_title_from_frontmatter(content: str) -> str:
 def ensure_h1_title(content: str) -> str:
     """
     确保文档有一级标题 (# 标题)
-    
+
     如果没有一级标题，从 frontmatter 的 title 字段生成
     这是处理 Web Clipper 元数据的一部分
     """
     # 检查是否已经有一级标题
     if re.search(r"^#\s+", content, re.MULTILINE):
         return content
-    
+
     # 检查是否有 frontmatter
-    frontmatter_match = re.match(
-        r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
-    )
-    
+    frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL)
+
     if not frontmatter_match:
         # 没有 frontmatter，无法生成标题
         return content
-    
+
     # 从 frontmatter 提取 title
     frontmatter_text = frontmatter_match.group(1)
     try:
         frontmatter_data = yaml.safe_load(frontmatter_text)
         if not isinstance(frontmatter_data, dict):
             return content
-        
+
         title = frontmatter_data.get("title", "").strip()
         if not title or title == "未命名":
             # title 无意义，无法生成一级标题
             return content
-        
+
         # 在 frontmatter 后插入一级标题
         end_pos = frontmatter_match.end()
         h1_line = f"\n# {title}\n"
-        
+
         result = content[:end_pos] + h1_line + content[end_pos:]
         print(f"  ✅ 从 title 生成一级标题: # {title}")
         return result
@@ -260,29 +258,27 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
     # 检查是否已经有一级标题
     if re.search(r"^# \S", content, re.MULTILINE):
         return content
-    
+
     # 检查是否有 frontmatter
-    frontmatter_match = re.match(
-        r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
-    )
-    
+    frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL)
+
     if not frontmatter_match:
         return content
-    
+
     # 从 frontmatter 提取 title
     frontmatter_text = frontmatter_match.group(1)
     try:
         frontmatter_data = yaml.safe_load(frontmatter_text)
         if not isinstance(frontmatter_data, dict):
             return content
-        
+
         title = frontmatter_data.get("title", "").strip()
         if not title or title == "未命名":
             return content
-        
-        lines = content.split('\n')
-        frontmatter_end_line = content[:frontmatter_match.end()].count('\n')
-        
+
+        lines = content.split("\n")
+        frontmatter_end_line = content[: frontmatter_match.end()].count("\n")
+
         # 已知的增强内容块标题
         enhancement_blocks = [
             "## 学习目标",
@@ -294,14 +290,14 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
             "## FAQ",
             "## 知识图谱",
         ]
-        
+
         # 查找最后一个增强块在内容中的位置
         last_enhancement_pos = -1
         for block in enhancement_blocks:
             pos = content.rfind(block)
             if pos > frontmatter_match.end() and pos > last_enhancement_pos:
                 last_enhancement_pos = pos
-        
+
         if last_enhancement_pos == -1:
             # 没有增强块，在第一个非空行前插入
             insert_line = frontmatter_end_line + 1
@@ -313,15 +309,15 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
             # 找到最后一个增强块
             # 从该块之后开始，查找第一个非##、非空、非###、非列表项的行
             # 该行前面就是插入位置
-            start_search_from = content.find('\n', last_enhancement_pos)
+            start_search_from = content.find("\n", last_enhancement_pos)
             if start_search_from == -1:
                 start_search_from = len(content)
             else:
                 start_search_from += 1
-            
+
             remaining_content = content[start_search_from:]
-            remaining_lines = remaining_content.split('\n')
-            
+            remaining_lines = remaining_content.split("\n")
+
             insert_line = len(lines)  # 默认在末尾
             for i, line in enumerate(remaining_lines):
                 # 空行继续
@@ -339,38 +335,39 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
                 # 列表项（属于增强块）
                 if re.match(r"^\s*[-*]\s", line) or re.match(r"^\s*\d+\.\s", line):
                     continue
-                
+
                 # 其他非空行（非##、非###、非列表），这是原始内容的开始
                 # 在这一行前面插入一级标题
                 insert_line_offset = sum(1 for l in remaining_lines[:i] if True) + i
                 # 计算行号
-                start_line = content[:start_search_from].count('\n')
+                start_line = content[:start_search_from].count("\n")
                 insert_line = start_line + i + 1
                 break
-        
+
         # 计算插入位置的字符位置
         insert_pos = 0
         for i in range(min(insert_line, len(lines))):
             insert_pos += len(lines[i]) + 1
-        
+
         h1_line = f"# {title}\n"
-        
+
         # 检查是否需要在前面添加空行
         if insert_pos > 0 and insert_pos < len(content):
             # 检查前一个字符是否是\n
-            if content[insert_pos - 1] == '\n':
+            if content[insert_pos - 1] == "\n":
                 # 前面有换行，检查是否需要额外空行
-                if insert_pos > 1 and content[insert_pos - 2] != '\n':
+                if insert_pos > 1 and content[insert_pos - 2] != "\n":
                     # 前面不是双换行，添加一个空行
                     h1_line = f"\n{h1_line}"
-        
+
         result = content[:insert_pos] + h1_line + content[insert_pos:]
         print(f"  ✅ 在增强内容后生成一级标题: # {title}")
         return result
-        
+
     except Exception as e:
         print(f"  ⚠️ 生成一级标题失败: {e}")
         import traceback
+
         traceback.print_exc()
         return content
 
@@ -859,13 +856,13 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
             print(f"  ⚠️ 内容增强跳过: {e}")
     else:
         print("  ⚠️ enhance_content.py 未找到，跳过内容增强")
-    
+
     # 处理 Web Clipper 元数据：确保有一级标题（放在最后，在所有增强内容之后）
     print("\n📝 处理 Web Clipper 元数据...")
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
     content = ensure_h1_title_after_enhancements(content)
-    
+
     # 写回文件
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)

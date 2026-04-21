@@ -161,7 +161,7 @@ def generate_summary(title: str, headings: List[Dict], paragraphs: List[str]) ->
 
 def find_insert_position_below_frontmatter(content: str) -> int | None:
     """返回 frontmatter 结束后的插入位置
-    
+
     优先级：
     1. 如果有一级标题，在一级标题之后
     2. 否则在 frontmatter 之后
@@ -178,10 +178,10 @@ def find_insert_position_below_frontmatter(content: str) -> int | None:
         if lines[i].strip() == "---":
             frontmatter_end = i
             break
-    
+
     if frontmatter_end is None:
         return None
-    
+
     # 检查 frontmatter 之后是否有一级标题
     for i in range(frontmatter_end + 1, len(lines)):
         if lines[i].startswith("# ") and not lines[i].startswith("## "):
@@ -191,7 +191,7 @@ def find_insert_position_below_frontmatter(content: str) -> int | None:
             for j in range(i + 1):
                 position += len(lines[j]) + 1  # +1 for newline character
             return position
-    
+
     # 没有找到一级标题，在 frontmatter 后插入
     position = 0
     for j in range(frontmatter_end + 1):  # 包括结束的 --- 行

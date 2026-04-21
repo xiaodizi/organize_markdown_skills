@@ -105,11 +105,15 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 这一步自动完成以下所有操作（必选项）：
 
 **Part A：处理 Web Clipper 元数据**
-- 🔍 **合并多个 frontmatter 块**：将 Obsidian 笔记属性和 Web Clipper 元数据智能合并
+- 🔍 **合并多个 frontmatter 块**：如果文档包含多个 frontmatter 块（Obsidian 笔记属性 + Web Clipper 元数据），自动将其合并成一个单一的笔记属性块
+  - 删除 Web Clipper 的元数据块本身
+  - 将所有 Web Clipper 字段（source、author、published、description 等）合并到笔记属性中
+  - 对于重复字段（如 tags、title），进行智能去重和合并
 - 📌 **生成一级标题**：如果文档缺少一级标题（`# 标题`），自动从 frontmatter 的 `title` 字段生成
-- 📋 **保留所有属性**：完整保留所有笔记属性和 Web Clipper 元数据（title、source、author、tags 等）
+  - title 为空或"未命名"时，跳过生成
+  - 生成的一级标题位置在所有内容增强块之后
 
-**Part B：处理图片和格式**  
+**Part B：处理图片和格式**
 - ⬇️ 下载图片到本地 `img/` 文件夹
 - 🔗 更新 markdown 中的图片引用为本地路径
 - ✨ 美化 markdown 格式（标题、列表、空行等）
@@ -120,41 +124,72 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 **处理示例**：
 
-输入（Web Clipper + Obsidian）：
-```
+输入（Web Clipper + Obsidian 两个 frontmatter 块）：
+```markdown
 ---
 title: 未命名
 aliases: []
 tags: [知识库/AI]
-updated: 2026-04-21
+updated: 2026-04-21T13:26:05
+created: 2026-04-21T13:26:05
+up: ""
+related: []
+summary: ""
 ---
 ---
-title: "AI Knowledge Layer..."
-source: "https://..."
-author: ["Author"]
+title: "AI Knowledge Layer (and why your agents are useless without it)"
+source: "https://x.com/example"
+author: ["John Doe"]
 published: 2026-04-14
-tags: [clippings]
+tags: [clippings, AI]
+description: "A comprehensive guide about how to build AI knowledge systems"
 ---
 
-[文档内容...]
+[原始文档内容...]
 ```
 
-输出（合并后）：
-```
+输出（合并为一个笔记属性块，删除 Web Clipper 块）：
+```markdown
 ---
-title: AI Knowledge Layer...
-source: https://...
-author: ["Author"]
-published: 2026-04-14
-tags: [知识库/AI, clippings]
+title: AI Knowledge Layer (and why your agents are useless without it)
 aliases: []
-updated: 2026-04-21
+tags:
+- 知识库/AI
+- clippings
+- AI
+updated: 2026-04-21 13:26:05
+created: 2026-04-21 13:26:05
+up: ''
+related: []
+summary: ''
+source: https://x.com/example
+author:
+- John Doe
+published: 2026-04-14
+description: A comprehensive guide about how to build AI knowledge systems
 ---
 
-# AI Knowledge Layer...
+## 学习目标
+...
 
-[文档内容...]
+## 前置知识
+...
+
+## 摘要
+...
+
+# AI Knowledge Layer (and why your agents are useless without it)
+
+[原始文档内容...]
 ```
+
+**关键点**：
+- ✅ 两个 frontmatter 块合并为一个笔记属性块
+- ✅ Web Clipper 元数据块已删除（不再有第二个 `---...---` 块）
+- ✅ Obsidian title（"未命名"）被替换为 Web Clipper 的有意义标题
+- ✅ tags 去重合并：`[知识库/AI, clippings, AI]`
+- ✅ 所有 Web Clipper 字段保留在笔记属性中：source、author、published、description
+- ✅ 一级标题（# 标题）自动从 title 字段生成，位置在所有内容增强块之后
 
 ### 步骤 5：Claude 验证并报告（自动执行）
 
