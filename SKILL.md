@@ -32,6 +32,7 @@ repository: https://github.com/xiaodizi/organize_markdown_skills.git
 
 ## 功能特性
 
+- **Web Clipper 支持**：自动处理 Obsidian Web Clipper 元数据，合并 frontmatter，生成文档标题
 - 自动下载图片到本地 `img` 文件夹
 - 更新图片引用为本地路径
 - 美化 Markdown 格式（标题空行、列表规范化等）
@@ -45,15 +46,20 @@ repository: https://github.com/xiaodizi/organize_markdown_skills.git
 ### markdown-organizer
 
 ```bash
+# 0) Claude 处理 Web Clipper 元数据（可选）
+# - 提取并合并 frontmatter 属性
+# - 从 title 字段生成文档标题
+# - 清理重复的元数据
+
 # 1) Claude 按步骤执行：
 # - 分析文档内容
-# - 生成摘要、学习目标、前置知识、FAQ
+# - 生成摘要、学习目标、前置知识、知识图谱、FAQ
 # - 插入到文档顶部
 
 # 2) 处理图片和格式
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdown.py <文件路径> [base_url]
 
-# 3) Claude 检查和保存
+# 3) Claude 验证并生成完成报告
 ```
 
 ### url-to-markdown
