@@ -23,11 +23,30 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 
 当你执行此命令时，按以下步骤操作：
 
+### 步骤 0：处理 Web Clipper 元数据（可选）
+
+如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
+
+1. **提取 Web Clipper 属性**：
+   - 识别格式：YAML frontmatter 中包含 `title`、`source`、`author`、`published` 等字段
+   - 将这些属性合并到文档现有的 frontmatter
+
+2. **生成文档标题**：
+   - 如果 frontmatter 中有 `title` 字段，在 frontmatter 后面添加 `# title内容` 作为文档的一级标题
+   - 删除已处理的 Web Clipper 临时元数据部分
+
+3. **合并 frontmatter**：
+   - 将 Web Clipper 的 `title` 字段保留在 frontmatter 中
+   - 其他属性（source, author, published, tags 等）也保留
+   - 如果现有 frontmatter 中已有相同字段，以现有内容为准
+
+**注意**：如果文档没有 Web Clipper 元数据，直接跳过此步骤。
+
 ### 步骤 1：读取并分析文档
 
 1. 读取原始 markdown 文件
 2. 提取：
-   - 标题（`# ` 开头）
+   - 标题（`# ` 开头）- 如果是从 Web Clipper 转换来的，这已经在步骤 0 中创建
    - 二级标题列表（`## ` 开头）- 作为主要章节
    - 首个标题后的前 3-5 个段落
    - 文档的整体主题和核心内容
@@ -63,7 +82,7 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 
 ### 步骤 3：更新文件
 
-现在将步骤 2 生成的五个内容块直接写入文件：
+现在将步骤 2 生成的五个内容块直接写入文件（如果步骤 0 已处理，插入位置在新添加的一级标题之后）：
 
 1. **确定插入位置**：
    - 如果文档有 YAML frontmatter（`---...---`），插入位置在 frontmatter 之后

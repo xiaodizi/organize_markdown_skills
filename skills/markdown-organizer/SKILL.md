@@ -86,6 +86,25 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 当用户触发命令时，Claude 会按以下步骤执行：
 
+### 第零步：处理 Web Clipper 元数据（可选）
+
+如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
+
+1. **提取 Web Clipper 属性**：
+   - 识别 YAML frontmatter 中的 `title`、`source`、`author`、`published` 等字段
+   - 将这些属性合并到文档现有的 frontmatter
+
+2. **生成文档标题**：
+   - 如果 frontmatter 中有 `title` 字段，在 frontmatter 后面添加 `# title内容` 作为一级标题
+   - 删除已处理的 Web Clipper 临时元数据部分
+
+3. **合并 frontmatter**：
+   - 保留 Web Clipper 的属性（title, source, author, published, tags 等）
+   - 如果现有 frontmatter 已有相同字段，以现有内容为准
+   - 确保最终 frontmatter 格式正确
+
+**如果文档没有 Web Clipper 元数据，直接跳过此步骤。**
+
 ### 第一步：分析文档内容
 
 读取原始文档，提取：
