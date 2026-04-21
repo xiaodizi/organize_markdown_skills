@@ -1,4 +1,8 @@
-# Markdown Organizer
+
+# Markdown Organizer v1.0.9
+
+## 1.0.9 更新内容
+- 合并 frontmatter 逻辑优化，所有字段遵循“空则覆盖”原则，tags 合并去重，完全满足合并需求。
 
 组织和美化从网页复制的 Markdown 文档，支持直接从 URL 转换网页为 Markdown，自动下载图片到本地并更新引用，利用 Claude 的智能思考生成学习目标和前置知识。
 
@@ -232,6 +236,9 @@ npx github:xiaodizi/organize_markdown_skills wechat-format input.md output.html
 详细构建步骤、使用方法和常见问题解决方案，请参见 [DOCKER_TEST.md](./DOCKER_TEST.md) 文档。
 
 ### 📋 更新日志
+| 版本 | 说明 |
+|------|------|
+| **v1.0.9** | 合并 frontmatter 逻辑优化，所有字段遵循“空则覆盖”原则，tags 合并去重，完全满足合并需求。|
 
 **完整详细的版本更新历史请参见 [CHANGELOG.md](./CHANGELOG.md)**
 
