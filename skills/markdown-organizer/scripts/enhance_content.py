@@ -162,11 +162,11 @@ def generate_summary(title: str, headings: List[Dict], paragraphs: List[str]) ->
 def find_insert_position_below_frontmatter(content: str) -> int | None:
     """返回 frontmatter 结束后的插入位置"""
     lines = content.split("\n")
-    
+
     # 文档必须以 --- 开头
     if not lines or lines[0].strip() != "---":
         return None
-    
+
     # 查找结束标记 ---
     for i in range(1, len(lines)):
         if lines[i].strip() == "---":
@@ -176,7 +176,7 @@ def find_insert_position_below_frontmatter(content: str) -> int | None:
             for j in range(i + 1):  # 包括结束的 --- 行
                 position += len(lines[j]) + 1  # +1 for newline character
             return position
-    
+
     return None
 
 
