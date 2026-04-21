@@ -51,9 +51,20 @@ def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
         filename = sanitize_filename(url, prefix=prefix)
         local_path = img_dir / filename
 
-        # 如果文件已存在，直接返回
+        # 优先检查带前缀的文件名
         if local_path.exists():
+            print(f"  ℹ️ 文件已存在: {filename}")
             return filename
+
+        # 如果带前缀的文件不存在，检查无前缀的旧文件
+        if prefix:
+            filename_without_prefix = sanitize_filename(url, prefix="")
+            old_path = img_dir / filename_without_prefix
+            if old_path.exists():
+                print(f"  ℹ️ 使用已存在的文件: {filename_without_prefix}")
+                # 文件存在但没有前缀，返回旧的文件名用于引用
+                # 这样至少图片不会损坏
+                return filename_without_prefix
 
         # 下载图片
         headers = {
