@@ -213,8 +213,8 @@ def clean_duplicate_metadata(content: str) -> str:
     """
     清理 frontmatter 中的重复元数据
 
-    当 title 被提取并生成为一级标题后，frontmatter 中的 title 字段就成了重复的
-    此函数删除 frontmatter 中的 title 字段
+    保留有意义的 title（来自 Web Clipper），但删除无意义的 title（如"未命名"）
+    这样一级标题 (# 标题) 可以从有意义的 title 生成
     """
     try:
         frontmatter_match = re.match(
@@ -236,8 +236,23 @@ def clean_duplicate_metadata(content: str) -> str:
         if "title" not in frontmatter_data:
             return content
 
-        # 删除 title 字段
-        del frontmatter_data["title"]
+        title = frontmatter_data.get("title", "")
+        title_str = str(title).strip() if title else ""
+
+        # 只删除无意义的 title（空字符串或"未命名"）
+        # 保留有意义的 title（来自 Web Clipper）
+        if not title_str or title_str == "未命名":
+            del frontmatter_data["title"]
+            print("  ✅ 已删除无意义的 title 字段")
+        else:
+            # 保留有意义的 title，使其为frontmatter的第一个字段
+            sorted_data = {}
+            sorted_data["title"] = frontmatter_data["title"]
+            for key, value in frontmatter_data.items():
+                if key != "title":
+                    sorted_data[key] = value
+            frontmatter_data = sorted_data
+            print(f"  ✅ 保留了有意义的 title: {title_str}")
 
         # 重新生成 frontmatter
         new_frontmatter_text = yaml.dump(
@@ -251,7 +266,6 @@ def clean_duplicate_metadata(content: str) -> str:
         rest_content = content[end_pos:]
         new_content = f"---\n{new_frontmatter_text}\n---\n{rest_content}"
 
-        print("  ✅ 已删除重复的 title 字段")
         return new_content
 
     except Exception as e:
@@ -304,10 +318,23 @@ def remove_duplicate_frontmatter(content: str) -> str:
         try:
             data = yaml.safe_load(frontmatter_text)
             if isinstance(data, dict):
-                # 合并策略：后面的块不覆盖已有的键，除非是列表则进行合并
+                # 合并策略：
+                # 1. 如果键不存在，添加它
+                # 2. 如果都是列表，去重合并
+                # 3. 特殊情况：如果是 title，优先使用有意义的（非"未命名"、非空）
                 for key, value in data.items():
                     if key not in merged_data:
                         merged_data[key] = value
+                    elif key == "title":
+                        # 对于 title 字段，智能选择：优先使用有意义的
+                        existing_title = str(merged_data.get(key, "")).strip()
+                        new_title = str(value).strip() if value else ""
+                        
+                        # 如果现有 title 无意义（"未命名"或空），则使用新的
+                        if not existing_title or existing_title == "未命名":
+                            if new_title and new_title != "未命名":
+                                merged_data[key] = value
+                        # 否则保留现有的 title
                     elif isinstance(value, list) and isinstance(
                         merged_data.get(key), list
                     ):
@@ -363,7 +390,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
             else str(merged_data["tags"])
         )
         print(f"    📌 保留了 tags 属性: [{tags_str}]")
-    
+
     # 显示合并后的属性
     print(f"    📋 合并后的属性: {', '.join(sorted(merged_data.keys()))}")
 
