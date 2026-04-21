@@ -256,10 +256,6 @@ def ensure_h1_title(content: str) -> str:
 def ensure_h1_title_after_enhancements(content: str) -> str:
     """
     确保文档有一级标题，位置在所有增强内容块之后
-    
-    增强内容块包括：## 学习目标，## 前置知识，## 摘要，## 常见问题 等
-    
-    如果没有一级标题，从 frontmatter 的 title 字段生成并插入在合适位置
     """
     # 检查是否已经有一级标题
     if re.search(r"^# \S", content, re.MULTILINE):
@@ -288,7 +284,7 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
         frontmatter_end_line = content[:frontmatter_match.end()].count('\n')
         
         # 已知的增强内容块标题
-        enhancement_headers = {
+        enhancement_blocks = [
             "## 学习目标",
             "## 前置知识",
             "## 前置条件",
@@ -297,88 +293,76 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
             "## 常见问题",
             "## FAQ",
             "## 知识图谱",
-        }
+        ]
         
-        # 查找所有增强块的行号
-        enhancement_lines = []
-        last_seen_header = None
-        last_seen_header_line = -1
+        # 查找最后一个增强块在内容中的位置
+        last_enhancement_pos = -1
+        for block in enhancement_blocks:
+            pos = content.rfind(block)
+            if pos > frontmatter_match.end() and pos > last_enhancement_pos:
+                last_enhancement_pos = pos
         
-        for i in range(frontmatter_end_line + 1, len(lines)):
-            line = lines[i]
-            
-            if line.strip().startswith("## "):
-                # 这是一个 ## 块
-                is_known_enhancement = any(
-                    line.strip().startswith(h.strip()) for h in enhancement_headers
-                )
-                
-                if is_known_enhancement:
-                    # 这是一个已知的增强块
-                    enhancement_lines.append(i)
-                    last_seen_header = line
-                    last_seen_header_line = i
-                else:
-                    # 这是一个未知的 ## 块，说明原始内容开始了
-                    break
-        
-        # 如果没有找到增强块，使用默认位置
-        if not enhancement_lines:
-            # 在第一个非空行前插入
+        if last_enhancement_pos == -1:
+            # 没有增强块，在第一个非空行前插入
             insert_line = frontmatter_end_line + 1
             for i in range(frontmatter_end_line + 1, len(lines)):
                 if lines[i].strip():
                     insert_line = i
                     break
         else:
-            # 在最后一个增强块之后找到合适的插入点
-            last_enhancement_header_line = enhancement_lines[-1]
-            insert_line = last_enhancement_header_line + 1
+            # 找到最后一个增强块
+            # 从该块之后开始，查找第一个非##、非空、非###、非列表项的行
+            # 该行前面就是插入位置
+            start_search_from = content.find('\n', last_enhancement_pos)
+            if start_search_from == -1:
+                start_search_from = len(content)
+            else:
+                start_search_from += 1
             
-            # 从该块开始，找到内容真正结束的位置
-            for i in range(last_enhancement_header_line + 1, len(lines)):
-                line = lines[i]
-                
+            remaining_content = content[start_search_from:]
+            remaining_lines = remaining_content.split('\n')
+            
+            insert_line = len(lines)  # 默认在末尾
+            for i, line in enumerate(remaining_lines):
                 # 空行继续
                 if not line.strip():
-                    insert_line = i + 1
                     continue
-                
-                # ### 子标题属于该块
+                # ###子标题继续（属于增强块）
                 if line.startswith("### "):
-                    insert_line = i + 1
                     continue
-                
-                # 如果遇到其他 ## 或 #，说明新块开始了
-                if line.startswith("#"):
+                # ## 标题结束块
+                if line.startswith("## "):
                     break
-                
-                # 列表项、缩进的内容属于该块
-                if line.startswith("  ") or line.startswith("- ") or line.startswith("* ") or line.startswith("1. "):
-                    insert_line = i + 1
+                # # 标题结束块
+                if line.startswith("# "):
+                    break
+                # 列表项（属于增强块）
+                if re.match(r"^\s*[-*]\s", line) or re.match(r"^\s*\d+\.\s", line):
                     continue
                 
-                # 其他非空行可能是增强块的内容或原始文档的开始
-                # 为了安全，我们假设任何非特殊格式的非空行都是内容的延续
-                # 直到遇到下一个块标题或遇到真正的文档内容段落
-                # 这里简化处理：只有当连续遇到真实段落时才认为块结束
-                # 但这很难判断...
-                # 所以我们直接让块在这里结束
+                # 其他非空行（非##、非###、非列表），这是原始内容的开始
+                # 在这一行前面插入一级标题
+                insert_line_offset = sum(1 for l in remaining_lines[:i] if True) + i
+                # 计算行号
+                start_line = content[:start_search_from].count('\n')
+                insert_line = start_line + i + 1
                 break
         
         # 计算插入位置的字符位置
         insert_pos = 0
-        for i in range(insert_line):
-            if i < len(lines):
-                insert_pos += len(lines[i]) + 1
+        for i in range(min(insert_line, len(lines))):
+            insert_pos += len(lines[i]) + 1
         
         h1_line = f"# {title}\n"
         
         # 检查是否需要在前面添加空行
-        if insert_pos > 0 and content[insert_pos - 1:insert_pos] == '\n':
-            # 前面已经有newline，检查是否需要额外空行
-            if insert_pos > 1 and content[insert_pos - 2:insert_pos - 1] != '\n':
-                h1_line = f"\n{h1_line}"
+        if insert_pos > 0 and insert_pos < len(content):
+            # 检查前一个字符是否是\n
+            if content[insert_pos - 1] == '\n':
+                # 前面有换行，检查是否需要额外空行
+                if insert_pos > 1 and content[insert_pos - 2] != '\n':
+                    # 前面不是双换行，添加一个空行
+                    h1_line = f"\n{h1_line}"
         
         result = content[:insert_pos] + h1_line + content[insert_pos:]
         print(f"  ✅ 在增强内容后生成一级标题: # {title}")
@@ -386,6 +370,8 @@ def ensure_h1_title_after_enhancements(content: str) -> str:
         
     except Exception as e:
         print(f"  ⚠️ 生成一级标题失败: {e}")
+        import traceback
+        traceback.print_exc()
         return content
 
 
