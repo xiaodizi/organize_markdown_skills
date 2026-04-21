@@ -632,6 +632,11 @@ def enhance_markdown_content(file_path: str | Path) -> str:
         )
         prepend_sections.append(prerequisites_section)
 
+    # 如果有步骤但没有 FAQ，在顶部添加 FAQ（与学习目标、前置知识一起）
+    if len(analysis["steps"]) > 0 and not analysis["has_faq"]:
+        faq_section = generate_faq_content(content, analysis)
+        prepend_sections.append(faq_section)
+
     if prepend_sections and insert_pos is not None:
         prepend_block = "\n".join(prepend_sections).rstrip() + "\n\n"
         enhanced_content = (
@@ -639,11 +644,6 @@ def enhance_markdown_content(file_path: str | Path) -> str:
             + prepend_block
             + enhanced_content[insert_pos:]
         )
-
-    # 如果有步骤但没有 FAQ，在末尾添加 FAQ
-    if len(analysis["steps"]) > 0 and not analysis["has_faq"]:
-        faq_section = generate_faq_content(content, analysis)
-        enhanced_content = enhanced_content.rstrip() + "\n\n" + faq_section
 
     # 规范标题前空行，避免出现 "...文本。## 标题" 的粘连问题
     enhanced_content = re.sub(r"([^\n])\n(#{1,6}\s)", r"\1\n\n\2", enhanced_content)
