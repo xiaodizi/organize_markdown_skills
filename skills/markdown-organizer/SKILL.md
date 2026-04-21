@@ -90,20 +90,37 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
 
-1. **提取 Web Clipper 属性**：
-   - 识别 YAML frontmatter 中的 `title`、`source`、`author`、`published` 等字段
-   - 将这些属性合并到文档现有的 frontmatter
-
-2. **生成文档标题**：
-   - 如果 frontmatter 中有 `title` 字段，在 frontmatter 后面添加 `# title内容` 作为一级标题
-   - 删除已处理的 Web Clipper 临时元数据部分
-
-3. **合并 frontmatter**：
-   - 保留 Web Clipper 的属性（title, source, author, published, tags 等）
+1. **合并 frontmatter**：
+   - 识别 YAML frontmatter 中的 Web Clipper 属性（`title`、`source`、`author`、`published` 等）
+   - 将这些属性与文档现有的 frontmatter 合并
    - 如果现有 frontmatter 已有相同字段，以现有内容为准
-   - 确保最终 frontmatter 格式正确
+   - 保留 `title` 字段在 frontmatter 中
 
-**如果文档没有 Web Clipper 元数据，直接跳过此步骤。**
+2. **生成文档一级标题**：
+   - 在 frontmatter 的结束标记（`---`）之后，插入一个空行
+   - 然后插入 `# {title字段内容}` 作为文档的一级标题
+   - 确保标题和原文内容之间有一个空行
+   - 例如：如果 title 是 "AI Knowledge Layer"，则插入 `# AI Knowledge Layer`
+
+3. **清理和验证**：
+   - 删除已处理的 Web Clipper 临时元数据部分（如果有）
+   - 检查 frontmatter 格式正确（YAML 语法无误）
+   - 确保生成的文档结构清晰
+
+**文件结构示例**：
+```yaml
+---
+title: AI Knowledge Layer
+source: https://example.com
+author: Author Name
+---
+
+# AI Knowledge Layer
+
+原文内容...
+```
+
+**如果文档没有 Web Clipper 元数据或没有 `title` 字段，直接跳过此步骤。**
 
 ### 第一步：分析文档内容
 
@@ -114,7 +131,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 ### 第二步：生成增强内容
 
-基于文档内容生成以下五个板块：
+基于文档内容生成以下四个板块：
 
 **摘要**
 - 1-3 句话概括文档主要内容
@@ -124,14 +141,19 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 - 3-5 个具体的学习目标
 - 格式：`- 能够...` 或 `- 理解...`
 
-**前置知识**
-- 3-5 项必需的基础知识
-- 格式：`- **概念名称**：简短说明`
-
 **知识图谱**
 - 生成 Mermaid mindmap 或 flowchart
 - 展现文档的核心概念和层级关系
 - 格式：```` ```mermaid ... ``` ````
+- **Mermaid 语法规范**（Obsidian 兼容）：
+  - **推荐**：mindmap 格式（最安全）
+  - **可用的节点形状**：
+    - 矩形：`[文本]`
+    - 圆角矩形：`(文本)`
+    - 菱形：`{文本}`
+  - **禁止**：`[/text]`、`[\text]`、`([text])`、`{{text}}` 等复杂形状
+  - 避免在节点文本中使用特殊字符（保持简洁）
+- 包含 3-5 个主要概念的层级关系
 
 **常见问题（FAQ）**
 - 3-5 个读者可能会有的问题
@@ -139,19 +161,18 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 ### 第三步：更新文件
 
-现在将第二步生成的五个板块直接写入文件：
+现在将第二步生成的四个板块直接写入文件：
 
 1. **确定插入位置**：
    - 如果文档有 YAML frontmatter，在 frontmatter 之后
    - 如果没有 frontmatter，在文档最顶部
 
 2. **构建完整内容**：
-   - 根据第二步的内容，拼接以下五个板块：
+   - 根据第二步的内容，拼接以下四个板块：
      1. `## 摘要` + 摘要内容
      2. `## 学习目标` + 学习目标列表
-     3. `## 前置知识` + 前置知识列表
-     4. `## 知识图谱` + Mermaid 代码块
-     5. `## 常见问题` + FAQ 列表
+     3. `## 知识图谱` + Mermaid 代码块
+     4. `## 常见问题` + FAQ 列表
    - 确保块之间各空一行
 
 3. **保存文件**：
@@ -214,7 +235,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 Commands 自动执行以下脚本：
 
 ```bash
-# Claude 按步骤生成增强内容（摘要、学习目标、前置知识、知识图谱、FAQ）
+# Claude 按步骤生成增强内容（摘要、学习目标、知识图谱、FAQ）
 # 并插入到文档顶部
 
 # 然后执行脚本处理图片和美化格式

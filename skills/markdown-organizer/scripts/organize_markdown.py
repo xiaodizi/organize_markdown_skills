@@ -21,8 +21,8 @@ from pathlib import Path
 import requests
 
 
-def sanitize_filename(url: str) -> str:
-    """根据 URL 生成安全的文件名"""
+def sanitize_filename(url: str, prefix: str = "") -> str:
+    """根据 URL 生成安全的文件名，可选前缀"""
     # 解析 URL 获取路径部分
     parsed = urllib.parse.urlparse(url)
     path = parsed.path
@@ -34,13 +34,21 @@ def sanitize_filename(url: str) -> str:
 
     # 使用 URL 的 MD5 作为文件名（避免文件名过长或包含非法字符）
     url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()[:12]
+
+    if prefix:
+        # 清理前缀中的非法字符，保留字母、数字、中文和下划线
+        prefix = re.sub(r"[^\w\u4e00-\u9fff-]", "_", prefix).strip("_")
+        if len(prefix) > 30:
+            prefix = prefix[:30]
+        return f"{prefix}_{url_hash}{ext}"
+
     return f"{url_hash}{ext}"
 
 
-def download_image(url: str, img_dir: Path) -> str | None:
-    """下载图片到本地目录"""
+def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
+    """下载图片到本地目录，可选前缀"""
     try:
-        filename = sanitize_filename(url)
+        filename = sanitize_filename(url, prefix=prefix)
         local_path = img_dir / filename
 
         # 如果文件已存在，直接返回
@@ -66,8 +74,10 @@ def download_image(url: str, img_dir: Path) -> str | None:
         return None
 
 
-def extract_and_download_images(content: str, base_url: str, img_dir: Path) -> str:
-    """提取并下载图片，返回更新后的内容"""
+def extract_and_download_images(
+    content: str, base_url: str, img_dir: Path, prefix: str = ""
+) -> str:
+    """提取并下载图片，返回更新后的内容。可选前缀用于图片文件名"""
     # 匹配 markdown 图片语法: ![alt](url)
     img_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
 
@@ -82,7 +92,7 @@ def extract_and_download_images(content: str, base_url: str, img_dir: Path) -> s
 
         # 下载图片
         print(f"\n📥 处理图片: {img_url}")
-        filename = download_image(img_url, img_dir)
+        filename = download_image(img_url, img_dir, prefix=prefix)
 
         if filename:
             # 返回本地引用
@@ -159,6 +169,27 @@ def resolve_file_path(file_path: str | Path) -> Path:
     error_msg += f"\n\n请提供绝对路径或确保文件在当前工作目录中"
 
     raise FileNotFoundError(error_msg)
+
+
+def extract_title_from_frontmatter(content: str) -> str:
+    """从 frontmatter 中提取 title 字段"""
+    try:
+        frontmatter_match = re.match(
+            r"^---\s*\n(.*?)\n---\s*(?:\n|$)", content, re.DOTALL
+        )
+        if not frontmatter_match:
+            return ""
+
+        frontmatter_text = frontmatter_match.group(1)
+        frontmatter_data = yaml.safe_load(frontmatter_text)
+
+        if frontmatter_data and isinstance(frontmatter_data, dict):
+            title = frontmatter_data.get("title", "")
+            return str(title).strip() if title else ""
+    except Exception as e:
+        print(f"  ⚠️ 提取 title 失败: {e}")
+
+    return ""
 
 
 def fix_yaml_frontmatter(content: str) -> str:
@@ -330,13 +361,20 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
+    # 从 frontmatter 中提取 title 作为图片前缀
+    title_prefix = extract_title_from_frontmatter(content)
+    if title_prefix:
+        print(f"📌 图片前缀: {title_prefix}")
+
     # 修复 YAML frontmatter 格式问题
     print("\n🔧 检查 YAML 格式...")
     content = fix_yaml_frontmatter(content)
 
     # 提取并下载图片
     print("\n🔍 搜索并下载图片...")
-    content = extract_and_download_images(content, base_url, img_dir)
+    content = extract_and_download_images(
+        content, base_url, img_dir, prefix=title_prefix
+    )
 
     # 美化 markdown
     print("\n✨ 美化 Markdown 格式...")

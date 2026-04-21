@@ -7,7 +7,7 @@ description: 将网页 URL 转换为 Markdown 文档并保存到本地。支持�
 
 ## 概述
 
-将网页 URL 转换为清晰的 Markdown 文档，自动下载图片到本地并更新引用，同时添加学习目标、前置知识等内容增强。
+将网页 URL 转换为清晨的 Markdown 文档，自动下载图片到本地并更新引用，同时添加摘要、学习目标、知识图谱、FAQ 等内容增强。
 
 ## 使用方式
 
@@ -28,7 +28,7 @@ description: 将网页 URL 转换为 Markdown 文档并保存到本地。支持�
 此技能通过 Commands 调用脚本执行：
 
 1. **脚本执行**：获取网页内容、转换为 Markdown、下载图片、美化格式
-2. **Claude 处理**：按步骤生成摘要、学习目标、前置知识、FAQ，插入到文档中
+2. **Claude 处理**：按步骤生成摘要、学习目标、知识图谱、FAQ，插入到文档中
 
 ## Claude 处理流程
 
@@ -49,13 +49,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
 
 ### 第三步：生成增强内容
 
-基于文档内容生成五个板块：
+基于文档内容生成四个板块：
 
 **摘要** - 1-3 句话概括文档主要内容
 
 **学习目标** - 3-5 个具体的学习目标
-
-**前置知识** - 3-5 项必需的基础知识
 
 **知识图谱** - Mermaid mindmap 或 flowchart 展现核心概念
 
@@ -63,19 +61,18 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
 
 ### 第四步：更新文件
 
-现在将第三步生成的五个板块直接写入文件：
+现在将第三步生成的四个板块直接写入文件：
 
 1. **确定插入位置**：
    - 如果文档有 YAML frontmatter（`---...---`），在 frontmatter 之后
    - 如果没有 frontmatter，在文档最顶部
 
 2. **构建完整内容**：
-   - 根据第三步的内容，拼接以下五个板块：
+   - 根据第三步的内容，拼接以下四个板块：
      1. `## 摘要` + 摘要内容
      2. `## 学习目标` + 学习目标列表
-     3. `## 前置知识` + 前置知识列表
-     4. `## 知识图谱` + Mermaid 代码块
-     5. `## 常见问题` + FAQ 列表
+     3. `## 知识图谱` + Mermaid 代码块
+     4. `## 常见问题` + FAQ 列表
    - 确保块之间各空一行
 
 3. **保存文件**：
@@ -111,9 +108,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
 5. **更新引用**：将图片引用更新为本地路径 `./img/filename.jpg`
 6. **美化格式**：标题空行、列表规范化、删除多余空行等
 7. **内容增强**：基于文档内容自动生成：
-   - 摘要、学习目标、前置知识
-   - 知识图谱（Mermaid 图）展现核心概念关系
-   - FAQ：常见问题和解答
+   - 摘要、学习目标、知识图谱、FAQ
 
 ## 脚本说明
 
@@ -123,7 +118,7 @@ Commands 自动执行以下脚本：
 # 1. 获取网页并转换为 Markdown
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py <URL> [输出文件路径]
 
-# 2. Claude 按步骤生成增强内容（摘要、学习目标、前置知识、知识图谱、FAQ）
+# 2. Claude 按步骤生成增强内容（摘要、学习目标、知识图谱、FAQ）
 # 并插入到文档顶部
 
 # 3. Claude 检查和保存

@@ -5,7 +5,7 @@ description: 将网页 URL 转换为 Markdown 文档并保存到本地，自动�
 
 # URL to Markdown
 
-将网页 URL 转换为清晰的 Markdown 文档，自动下载图片到本地并更新引用，同时添加学习目标、前置知识等内容增强。
+将网页 URL 转换为清晨的 Markdown 文档，自动下载图片到本地并更新引用，同时添加摘要、学习目标、知识图谱、FAQ 等内容增强。
 
 ## 使用方式
 
@@ -53,7 +53,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
 
 **▌ 学习目标** - 3-5 个具体的学习目标，格式：`- 能够...` 或 `- 理解...`
 
-**▌ 前置知识** - 3-5 项学习本文档前需要了解的基础知识，格式：`- **技能**：说明`
 
 **▌ 知识图谱** - 基于文档内容生成 Mermaid mindmap 或 graph，展现核心概念及其关系
 
@@ -68,12 +67,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
    - 如果没有 frontmatter，插入到文档最顶部
 
 2. **构建完整内容**：
-   - 根据步骤 3 的内容，拼接以下五个板块：
+   - 根据步骤 3 的内容，拼接以下四个板块：
      1. `## 摘要` + 摘要内容
      2. `## 学习目标` + 学习目标列表
-     3. `## 前置知识` + 前置知识列表
-     4. `## 知识图谱` + Mermaid 代码块
-     5. `## 常见问题` + FAQ 列表
+     3. `## 知识图谱` + Mermaid 代码块
+     4. `## 常见问题` + FAQ 列表
    - 确保块之间各空一行
 
 3. **保存文件**：
@@ -106,4 +104,4 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/url-to-markdown/scripts/url_to_markdown.py 
 2. **结构清晰**：增强内容必须在第一个 `# ` 标题之后
 3. **语言一致**：与原文保持一致的风格和语言（中文）
 4. **不修改原文**：只在指定位置添加新内容
-5. **难度匹配**：学习目标和前置知识要与文档难度相匹配
+3. **难度匹配**：学习目标要与文档难度相匹配
