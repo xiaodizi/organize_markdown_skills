@@ -569,6 +569,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
     for clipper_block in web_clipper_blocks:
         for key, value in clipper_block["data"].items():
             if key not in merged_data:
+                # 第一个块中没有这个字段，直接添加
                 merged_data[key] = value
             elif key == "title":
                 # 对于 title 字段，智能选择：优先使用有意义的
@@ -586,7 +587,21 @@ def remove_duplicate_frontmatter(content: str) -> str:
                     if item not in merged_list:
                         merged_list.append(item)
                 merged_data[key] = merged_list
-            # 否则保留第一个块的值
+            else:
+                # 对于其他字段，如果现有值为空，用新值覆盖
+                existing_value = merged_data.get(key, "")
+                
+                # 检查现有值是否为"空"（空字符串、空列表、None 等）
+                is_empty = (
+                    existing_value == "" 
+                    or existing_value is None 
+                    or (isinstance(existing_value, list) and len(existing_value) == 0)
+                )
+                
+                if is_empty and value:
+                    # 现有值为空，且新值不为空，则用新值覆盖
+                    merged_data[key] = value
+                # 否则保留第一个块的值
 
     # 重新生成 frontmatter
     new_frontmatter_text = yaml.dump(
