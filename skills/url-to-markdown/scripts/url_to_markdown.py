@@ -30,14 +30,14 @@ def sanitize_filename(url: str, prefix: str = "") -> str:
         ext = ".jpg"
 
     url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()[:12]
-    
+
     if prefix:
         # 清理前缀中的非法字符，保留字母、数字、中文和下划线
         prefix = re.sub(r"[^\w\u4e00-\u9fff-]", "_", prefix).strip("_")
         if len(prefix) > 30:
             prefix = prefix[:30]
         return f"{prefix}_{url_hash}{ext}"
-    
+
     return f"{url_hash}{ext}"
 
 
@@ -67,7 +67,9 @@ def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
         return None
 
 
-def extract_and_download_images(content: str, base_url: str, img_dir: Path, prefix: str = "") -> str:
+def extract_and_download_images(
+    content: str, base_url: str, img_dir: Path, prefix: str = ""
+) -> str:
     """提取并下载图片，返回更新后的内容。可选前缀用于图片文件名"""
     img_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
 
@@ -163,36 +165,83 @@ def clean_html_content(html: str) -> str:
     lazy_attrs = ["data-src", "data-url", "data-original", "data-img-src"]
     for img in soup.find_all("img"):
         for attr in lazy_attrs:
-            if img.has_attr(attr) and img[attr].strip().startswith(("http://", "https://")):
+            if img.has_attr(attr) and img[attr].strip().startswith(
+                ("http://", "https://")
+            ):
                 img["src"] = img[attr]
                 break
 
     # 要删除的标签和常见无用内容选择器
     selectors_to_remove = [
         # 脚本和样式
-        "script", "style", "noscript", "iframe",
+        "script",
+        "style",
+        "noscript",
+        "iframe",
         # 导航和页脚
-        "nav", "footer", "header", "sidebar",
+        "nav",
+        "footer",
+        "header",
+        "sidebar",
         # 广告和推荐区域（常见类名和ID）
-        ".ad", ".ads", ".advertisement", ".banner",
-        "#footer", "#header", "#nav", "#sidebar", "#sidebar-wrapper",
-        ".footer", ".header", ".navbar", ".navigation", ".side-bar",
-        ".related", ".recommend", ".recommendation", ".recommended",
-        ".popular", ".hot", ".trending",
-        ".comment", ".comments", "#comment", "#comments",
-        ".share", ".sharing", ".social",
-        ".author-card", ".author-info", ".profile-card",
-        ".copyright", ".license", ".powered-by",
-        ".toutiao__footer", ".article-footer", ".article-comment",
-        ".article-related", ".recommend-feed", ".hot-board",
-        ".video-card", ".related-news", ".news-recommend",
-        "#reptilde-beg", "#reptilde-end",  # 折叠区域
-        ".back-to-top", ".go-top",
+        ".ad",
+        ".ads",
+        ".advertisement",
+        ".banner",
+        "#footer",
+        "#header",
+        "#nav",
+        "#sidebar",
+        "#sidebar-wrapper",
+        ".footer",
+        ".header",
+        ".navbar",
+        ".navigation",
+        ".side-bar",
+        ".related",
+        ".recommend",
+        ".recommendation",
+        ".recommended",
+        ".popular",
+        ".hot",
+        ".trending",
+        ".comment",
+        ".comments",
+        "#comment",
+        "#comments",
+        ".share",
+        ".sharing",
+        ".social",
+        ".author-card",
+        ".author-info",
+        ".profile-card",
+        ".copyright",
+        ".license",
+        ".powered-by",
+        ".toutiao__footer",
+        ".article-footer",
+        ".article-comment",
+        ".article-related",
+        ".recommend-feed",
+        ".hot-board",
+        ".video-card",
+        ".related-news",
+        ".news-recommend",
+        "#reptilde-beg",
+        "#reptilde-end",  # 折叠区域
+        ".back-to-top",
+        ".go-top",
         # 头条特定
-        ".nav-bar", ".header-nav", "t-nav", "tt-feed",
-        ".bottom-bar", ".article-share",
-        ".article-meta", ".article-detail__meta",
-        "#bottomContainer", ".article-toolbar",
+        ".nav-bar",
+        ".header-nav",
+        "t-nav",
+        "tt-feed",
+        ".bottom-bar",
+        ".article-share",
+        ".article-meta",
+        ".article-detail__meta",
+        "#bottomContainer",
+        ".article-toolbar",
     ]
 
     for selector in selectors_to_remove:
@@ -221,12 +270,24 @@ def clean_html_content(html: str) -> str:
     # 找不到就找常见的内容容器类名
     if not main_content:
         content_candidates = [
-            ".article-content", ".article-body", ".post-content", ".post-body",
-            ".entry-content", ".entry-body", ".content", ".main-content",
-            ".article-main", ".main-body", "#article-content", "#main-content",
-            ".rich_media", ".rich_media_content",  # 微信公众号
-            ".article-content-inner", ".toutiao-content",  # 头条
-            ".article-detail__content", ".article-content-wrap",
+            ".article-content",
+            ".article-body",
+            ".post-content",
+            ".post-body",
+            ".entry-content",
+            ".entry-body",
+            ".content",
+            ".main-content",
+            ".article-main",
+            ".main-body",
+            "#article-content",
+            "#main-content",
+            ".rich_media",
+            ".rich_media_content",  # 微信公众号
+            ".article-content-inner",
+            ".toutiao-content",  # 头条
+            ".article-detail__content",
+            ".article-content-wrap",
         ]
         for candidate in content_candidates:
             found = soup.select_one(candidate)
@@ -238,7 +299,7 @@ def clean_html_content(html: str) -> str:
     if main_content:
         # 检查这个容器是否真的包含内容（至少有一些文字或图片）
         text_len = len(main_content.get_text(strip=True))
-        img_count = len(main_content.find_all('img'))
+        img_count = len(main_content.find_all("img"))
         # 如果容器太小空的，可能找错了，fallback 到 body
         if text_len > 100 or img_count > 0:
             # 清理空标签，但是保留：
@@ -246,7 +307,7 @@ def clean_html_content(html: str) -> str:
             # - pre/code 标签（代码块，即使看起来空也可能是格式问题不删）
             # - 任何包含子元素的容器都不删（只删除真正叶子节点的空标签）
             for elem in main_content.find_all():
-                if elem.name in ['img', 'pre', 'code']:
+                if elem.name in ["img", "pre", "code"]:
                     continue  # 图片和代码永远不删
                 # 只删除：没有文字，也没有任何子元素 的真正空标签
                 # 这样可以避免误删除包含代码块的外层容器
@@ -405,7 +466,9 @@ def url_to_markdown(
         print(f"📌 图片前缀: {title_prefix}")
 
     print("\n🔍 搜索并下载图片...")
-    markdown = extract_and_download_images(markdown, base_url, img_dir, prefix=title_prefix)
+    markdown = extract_and_download_images(
+        markdown, base_url, img_dir, prefix=title_prefix
+    )
 
     print("\n✨ 美化 Markdown 格式...")
     markdown = beautify_markdown(markdown)
@@ -428,16 +491,23 @@ def show_help():
     print("  [输出文件]            输出文件路径（可选，默认自动生成）")
     print("")
     print("选项:")
-    print("  --render              使用无头浏览器渲染页面（Playwright），以抓取 JS 渲染后的内容")
+    print(
+        "  --render              使用无头浏览器渲染页面（Playwright），以抓取 JS 渲染后的内容"
+    )
     print("  --render-wait-for SELECTOR   渲染时等待某个 CSS 选择器出现再抓取（可选）")
-    print("  --render-wait-until STRATEGY  渲染时页面导航等待策略: load, domcontentloaded, networkidle (默认: networkidle)")
+    print(
+        "  --render-wait-until STRATEGY  渲染时页面导航等待策略: load, domcontentloaded, networkidle (默认: networkidle)"
+    )
     print("  --render-timeout MILLIS      渲染超时时间（毫秒，默认 30000）")
     print("")
     print("示例:")
     print("  url-to-markdown https://example.com/article.html")
     print("  url-to-markdown https://example.com/article.html output.md")
     print("  url-to-markdown https://react-site.com/article output.md --render")
-    print("  url-to-markdown https://react-site.com/article output.md --render --render-wait-for \".article-content\"")
+    print(
+        '  url-to-markdown https://react-site.com/article output.md --render --render-wait-for ".article-content"'
+    )
+
 
 def main():
     import sys
@@ -469,7 +539,9 @@ def main():
         elif arg == "--render-wait-until" and i + 1 < len(sys.argv):
             render_wait_until = sys.argv[i + 1]
             if render_wait_until not in ["load", "domcontentloaded", "networkidle"]:
-                print(f"❌ 错误: --render-wait-until 必须是: load, domcontentloaded, networkidle")
+                print(
+                    f"❌ 错误: --render-wait-until 必须是: load, domcontentloaded, networkidle"
+                )
                 sys.exit(1)
             i += 2
         elif arg == "--render-timeout" and i + 1 < len(sys.argv):
@@ -499,6 +571,7 @@ def main():
     except Exception as e:
         print(f"❌ 错误: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
