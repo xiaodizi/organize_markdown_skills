@@ -334,6 +334,12 @@ def remove_duplicate_frontmatter(content: str) -> str:
     # 构建新内容：只保留第一个 frontmatter 块的位置，用合并后的数据替换
     first_start, first_end = frontmatter_blocks[0]
 
+    # 将所有其他 frontmatter 块的行号集合（用于快速查找和跳过）
+    other_frontmatter_lines = set()
+    for other_start, other_end in frontmatter_blocks[1:]:
+        for line_idx in range(other_start, other_end + 1):
+            other_frontmatter_lines.add(line_idx)
+
     # 删除所有其他 frontmatter 块
     result_lines = []
     result_lines.extend(lines[:first_start])  # 第一个 frontmatter 之前的内容
@@ -341,26 +347,10 @@ def remove_duplicate_frontmatter(content: str) -> str:
     result_lines.extend(new_frontmatter_text.split("\n"))
     result_lines.append("---")
 
-    # 从第一个 frontmatter 之后开始添加内容
-    i = first_end + 1
-    while i < len(lines):
-        # 跳过其他 frontmatter 块
-        if lines[i].strip() == "---":
-            # 可能是另一个 frontmatter 块的开始
-            skip_this = False
-            for other_start, other_end in frontmatter_blocks[1:]:
-                if i == other_start:
-                    # 跳到这个块的结束后
-                    i = other_end + 1
-                    skip_this = True
-                    break
-            if not skip_this:
-                # 不是任何已记录的 frontmatter 块，直接添加
-                result_lines.append(lines[i])
-                i += 1
-        else:
+    # 从第一个 frontmatter 之后开始添加内容，跳过其他 frontmatter 块的所有行
+    for i in range(first_end + 1, len(lines)):
+        if i not in other_frontmatter_lines:
             result_lines.append(lines[i])
-            i += 1
 
     result = "\n".join(result_lines)
 
@@ -373,6 +363,9 @@ def remove_duplicate_frontmatter(content: str) -> str:
             else str(merged_data["tags"])
         )
         print(f"    📌 保留了 tags 属性: [{tags_str}]")
+    
+    # 显示合并后的属性
+    print(f"    📋 合并后的属性: {', '.join(sorted(merged_data.keys()))}")
 
     return result
 
