@@ -225,14 +225,15 @@ def analyze_document(file_path: str | Path) -> Dict:
         elif in_code_block:
             analysis["code_blocks"][-1]["content"].append(line)
 
-    # 检测已有结构
+    # 检测已有结构（精确匹配，避免误检）
     for heading in analysis["headings"]:
         text_lower = heading["text"].lower()
-        if "学习目标" in text_lower or "学习目标" in text_lower:
+        # 精确匹配标题：不是包含关键词，而是标题本身就是这些名称
+        if text_lower.strip() == "学习目标":
             analysis["has_learning_objectives"] = True
-        if "前置知识" in text_lower or " prerequisites" in text_lower:
+        if text_lower.strip() == "前置知识" or text_lower.strip() == "prerequisites":
             analysis["has_prerequisites"] = True
-        if "常见问题" in text_lower or "faq" in text_lower:
+        if text_lower.strip() == "常见问题" or text_lower.strip() == "faq":
             analysis["has_faq"] = True
 
     # 检测步骤模式
@@ -611,6 +612,9 @@ def enhance_markdown_content(file_path: str | Path) -> str:
         first_heading_match = re.search(r"^#{1,6}\s+.+$", content, re.MULTILINE)
         if first_heading_match:
             insert_pos = first_heading_match.start()
+        else:
+            # 如果没有标题，插入到文档开头
+            insert_pos = 0
 
     prepend_sections = []
 
