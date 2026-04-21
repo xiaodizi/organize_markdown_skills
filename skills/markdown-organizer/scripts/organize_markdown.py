@@ -253,6 +253,124 @@ def clean_duplicate_metadata(content: str) -> str:
         return content
 
 
+def remove_duplicate_frontmatter(content: str) -> str:
+    """
+    合并多个 frontmatter 块为一个
+
+    某些笔记（如 Web Clipper 导出）可能包含多个 frontmatter 块。
+    此函数将它们合并，保留所有有价值的属性（特别是 tags 等）。
+    """
+    lines = content.split("\n")
+
+    # 找到所有 frontmatter 块的位置
+    frontmatter_blocks = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip() == "---":
+            # 找到一个开始标记
+            start = i
+            i += 1
+            # 找到结束标记
+            while i < len(lines) and lines[i].strip() != "---":
+                i += 1
+            if i < len(lines):
+                # 找到了结束标记
+                end = i
+                frontmatter_blocks.append((start, end))
+                i += 1
+            else:
+                break
+        else:
+            i += 1
+
+    if len(frontmatter_blocks) <= 1:
+        # 没有重复的 frontmatter，直接返回
+        return content
+
+    # 有多个 frontmatter 块，需要合并
+    print(f"  ℹ️ 检测到 {len(frontmatter_blocks)} 个 frontmatter 块，尝试合并...")
+
+    merged_data = {}
+
+    # 逐个解析并合并每个 frontmatter 块
+    for block_idx, (start, end) in enumerate(frontmatter_blocks):
+        frontmatter_text = "\n".join(lines[start + 1 : end])
+        try:
+            data = yaml.safe_load(frontmatter_text)
+            if isinstance(data, dict):
+                # 合并策略：后面的块不覆盖已有的键，除非是列表则进行合并
+                for key, value in data.items():
+                    if key not in merged_data:
+                        merged_data[key] = value
+                    elif isinstance(value, list) and isinstance(
+                        merged_data.get(key), list
+                    ):
+                        # 如果都是列表，去重后合并（保留顺序）
+                        merged_list = list(merged_data[key])
+                        for item in value:
+                            if item not in merged_list:
+                                merged_list.append(item)
+                        merged_data[key] = merged_list
+                    # 否则保留第一个块的值
+        except yaml.YAMLError as e:
+            print(
+                f"    ⚠️ 第 {block_idx + 1} 个 frontmatter 块解析失败: {str(e)[:30]}..."
+            )
+
+    # 重新生成 frontmatter
+    new_frontmatter_text = yaml.dump(
+        merged_data,
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+    ).rstrip()
+
+    # 构建新内容：只保留第一个 frontmatter 块的位置，用合并后的数据替换
+    first_start, first_end = frontmatter_blocks[0]
+
+    # 删除所有其他 frontmatter 块
+    result_lines = []
+    result_lines.extend(lines[:first_start])  # 第一个 frontmatter 之前的内容
+    result_lines.append("---")
+    result_lines.extend(new_frontmatter_text.split("\n"))
+    result_lines.append("---")
+
+    # 从第一个 frontmatter 之后开始添加内容
+    i = first_end + 1
+    while i < len(lines):
+        # 跳过其他 frontmatter 块
+        if lines[i].strip() == "---":
+            # 可能是另一个 frontmatter 块的开始
+            skip_this = False
+            for other_start, other_end in frontmatter_blocks[1:]:
+                if i == other_start:
+                    # 跳到这个块的结束后
+                    i = other_end + 1
+                    skip_this = True
+                    break
+            if not skip_this:
+                # 不是任何已记录的 frontmatter 块，直接添加
+                result_lines.append(lines[i])
+                i += 1
+        else:
+            result_lines.append(lines[i])
+            i += 1
+
+    result = "\n".join(result_lines)
+
+    duplicate_count = len(frontmatter_blocks) - 1
+    print(f"  ✅ 已合并 {duplicate_count} 个 frontmatter 块")
+    if "tags" in merged_data:
+        tags_str = (
+            ", ".join(merged_data["tags"])
+            if isinstance(merged_data["tags"], list)
+            else str(merged_data["tags"])
+        )
+        print(f"    📌 保留了 tags 属性: [{tags_str}]")
+
+    return result
+
+
 def fix_yaml_frontmatter(content: str) -> str:
     """
     检测并修复 YAML frontmatter 中的缩进问题
@@ -421,6 +539,10 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     print(f"\n📖 读取文件: {file_path}")
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
+
+    # 删除重复的 frontmatter，只保留顶部的第一个
+    print("\n🧹 删除重复的 frontmatter...")
+    content = remove_duplicate_frontmatter(content)
 
     # 从 frontmatter 中提取 title 作为图片前缀
     title_prefix = extract_title_from_frontmatter(content)
