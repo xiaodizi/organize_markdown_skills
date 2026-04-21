@@ -273,12 +273,45 @@ def clean_duplicate_metadata(content: str) -> str:
         return content
 
 
+def identify_frontmatter_type(data: dict) -> str:
+    """
+    识别 frontmatter 块的类型
+    
+    返回值：
+    - "obsidian": Obsidian 笔记属性（包含 aliases、up、related、summary 等特定字段）
+    - "web_clipper": Web Clipper 元数据（包含 source、author、published 等）
+    - "mixed": 混合类型
+    """
+    # Obsidian 特定字段
+    obsidian_fields = {"aliases", "up", "related", "summary", "updated"}
+    # Web Clipper 特定字段
+    web_clipper_fields = {"source", "author", "published", "description"}
+    
+    data_keys = set(data.keys())
+    has_obsidian_fields = bool(data_keys & obsidian_fields)
+    has_web_clipper_fields = bool(data_keys & web_clipper_fields)
+    
+    if has_obsidian_fields and not has_web_clipper_fields:
+        return "obsidian"
+    elif has_web_clipper_fields and not has_obsidian_fields:
+        return "web_clipper"
+    elif has_obsidian_fields and has_web_clipper_fields:
+        return "mixed"
+    else:
+        # 都没有特定字段，尝试根据 title 判断
+        title = str(data.get("title", "")).strip()
+        if title == "未命名" or title == "":
+            return "obsidian"
+        else:
+            return "web_clipper"
+
+
 def remove_duplicate_frontmatter(content: str) -> str:
     """
     合并多个 frontmatter 块为一个
 
     某些笔记（如 Web Clipper 导出）可能包含多个 frontmatter 块。
-    此函数将它们合并，保留所有有价值的属性（特别是 tags 等）。
+    此函数会智能识别块的类型并正确合并，确保笔记属性留在顶部。
     """
     lines = content.split("\n")
 
@@ -308,47 +341,83 @@ def remove_duplicate_frontmatter(content: str) -> str:
         return content
 
     # 有多个 frontmatter 块，需要合并
-    print(f"  ℹ️ 检测到 {len(frontmatter_blocks)} 个 frontmatter 块，尝试合并...")
+    print(f"  ℹ️ 检测到 {len(frontmatter_blocks)} 个 frontmatter 块，分析类型...")
 
-    merged_data = {}
-
-    # 逐个解析并合并每个 frontmatter 块
+    # 解析所有 frontmatter 块并识别类型
+    frontmatter_info = []
     for block_idx, (start, end) in enumerate(frontmatter_blocks):
         frontmatter_text = "\n".join(lines[start + 1 : end])
         try:
             data = yaml.safe_load(frontmatter_text)
             if isinstance(data, dict):
-                # 合并策略：
-                # 1. 如果键不存在，添加它
-                # 2. 如果都是列表，去重合并
-                # 3. 特殊情况：如果是 title，优先使用有意义的（非"未命名"、非空）
-                for key, value in data.items():
-                    if key not in merged_data:
-                        merged_data[key] = value
-                    elif key == "title":
-                        # 对于 title 字段，智能选择：优先使用有意义的
-                        existing_title = str(merged_data.get(key, "")).strip()
-                        new_title = str(value).strip() if value else ""
-                        
-                        # 如果现有 title 无意义（"未命名"或空），则使用新的
-                        if not existing_title or existing_title == "未命名":
-                            if new_title and new_title != "未命名":
-                                merged_data[key] = value
-                        # 否则保留现有的 title
-                    elif isinstance(value, list) and isinstance(
-                        merged_data.get(key), list
-                    ):
-                        # 如果都是列表，去重后合并（保留顺序）
-                        merged_list = list(merged_data[key])
-                        for item in value:
-                            if item not in merged_list:
-                                merged_list.append(item)
-                        merged_data[key] = merged_list
-                    # 否则保留第一个块的值
+                block_type = identify_frontmatter_type(data)
+                frontmatter_info.append({
+                    "index": block_idx,
+                    "start": start,
+                    "end": end,
+                    "type": block_type,
+                    "data": data
+                })
+                print(f"    块 {block_idx + 1}: {block_type}")
+            else:
+                frontmatter_info.append({
+                    "index": block_idx,
+                    "start": start,
+                    "end": end,
+                    "type": "invalid",
+                    "data": {}
+                })
         except yaml.YAMLError as e:
-            print(
-                f"    ⚠️ 第 {block_idx + 1} 个 frontmatter 块解析失败: {str(e)[:30]}..."
-            )
+            print(f"    ⚠️ 块 {block_idx + 1} 解析失败: {str(e)[:30]}...")
+            frontmatter_info.append({
+                "index": block_idx,
+                "start": start,
+                "end": end,
+                "type": "invalid",
+                "data": {}
+            })
+
+    # 找到 obsidian 块和 web_clipper 块
+    obsidian_block = None
+    web_clipper_blocks = []
+    for info in frontmatter_info:
+        if info["type"] == "obsidian":
+            obsidian_block = info
+        elif info["type"] in ["web_clipper", "mixed"]:
+            web_clipper_blocks.append(info)
+    
+    # 如果没找到 obsidian 块，使用第一个块
+    if obsidian_block is None and frontmatter_info:
+        obsidian_block = frontmatter_info[0]
+        web_clipper_blocks = frontmatter_info[1:]
+
+    if obsidian_block is None:
+        return content
+
+    # 合并所有数据到 obsidian 块
+    merged_data = dict(obsidian_block["data"])
+    
+    for clipper_block in web_clipper_blocks:
+        for key, value in clipper_block["data"].items():
+            if key not in merged_data:
+                merged_data[key] = value
+            elif key == "title":
+                # 对于 title 字段，智能选择：优先使用有意义的
+                existing_title = str(merged_data.get(key, "")).strip()
+                new_title = str(value).strip() if value else ""
+                
+                # 如果现有 title 无意义（"未命名"或空），则使用新的
+                if not existing_title or existing_title == "未命名":
+                    if new_title and new_title != "未命名":
+                        merged_data[key] = value
+            elif isinstance(value, list) and isinstance(merged_data.get(key), list):
+                # 如果都是列表，去重后合并（保留顺序）
+                merged_list = list(merged_data[key])
+                for item in value:
+                    if item not in merged_list:
+                        merged_list.append(item)
+                merged_data[key] = merged_list
+            # 否则保留第一个块的值
 
     # 重新生成 frontmatter
     new_frontmatter_text = yaml.dump(
@@ -358,31 +427,32 @@ def remove_duplicate_frontmatter(content: str) -> str:
         sort_keys=False,
     ).rstrip()
 
-    # 构建新内容：只保留第一个 frontmatter 块的位置，用合并后的数据替换
-    first_start, first_end = frontmatter_blocks[0]
+    # 构建新内容：保留 obsidian 块的位置，删除其他所有 frontmatter 块
+    obsidian_start, obsidian_end = obsidian_block["start"], obsidian_block["end"]
 
     # 将所有其他 frontmatter 块的行号集合（用于快速查找和跳过）
     other_frontmatter_lines = set()
-    for other_start, other_end in frontmatter_blocks[1:]:
-        for line_idx in range(other_start, other_end + 1):
-            other_frontmatter_lines.add(line_idx)
+    for info in frontmatter_info:
+        if info != obsidian_block:
+            for line_idx in range(info["start"], info["end"] + 1):
+                other_frontmatter_lines.add(line_idx)
 
     # 删除所有其他 frontmatter 块
     result_lines = []
-    result_lines.extend(lines[:first_start])  # 第一个 frontmatter 之前的内容
+    result_lines.extend(lines[:obsidian_start])  # obsidian 块之前的内容
     result_lines.append("---")
     result_lines.extend(new_frontmatter_text.split("\n"))
     result_lines.append("---")
 
-    # 从第一个 frontmatter 之后开始添加内容，跳过其他 frontmatter 块的所有行
-    for i in range(first_end + 1, len(lines)):
+    # 从 obsidian 块之后开始添加内容，跳过其他 frontmatter 块的所有行
+    for i in range(obsidian_end + 1, len(lines)):
         if i not in other_frontmatter_lines:
             result_lines.append(lines[i])
 
     result = "\n".join(result_lines)
 
     duplicate_count = len(frontmatter_blocks) - 1
-    print(f"  ✅ 已合并 {duplicate_count} 个 frontmatter 块")
+    print(f"  ✅ 已合并 {duplicate_count} 个 frontmatter 块到笔记属性中")
     if "tags" in merged_data:
         tags_str = (
             ", ".join(merged_data["tags"])
