@@ -161,9 +161,22 @@ def generate_summary(title: str, headings: List[Dict], paragraphs: List[str]) ->
 
 def find_insert_position_below_frontmatter(content: str) -> int | None:
     """返回 frontmatter 结束后的插入位置"""
-    frontmatter_match = re.match(r"\A---\s*\n.*?\n---\s*(?:\n|\Z)", content, re.DOTALL)
-    if frontmatter_match:
-        return frontmatter_match.end()
+    lines = content.split("\n")
+    
+    # 文档必须以 --- 开头
+    if not lines or lines[0].strip() != "---":
+        return None
+    
+    # 查找结束标记 ---
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            # 找到了结束标记，计算其在原文中的位置
+            # 从行索引转换为字符位置
+            position = 0
+            for j in range(i + 1):  # 包括结束的 --- 行
+                position += len(lines[j]) + 1  # +1 for newline character
+            return position
+    
     return None
 
 
@@ -177,23 +190,25 @@ def enhance_markdown_content(file_path: str | Path) -> str:
 
     analysis = analyze_document(file_path)
 
-    # 如果已有摘要，直接返回
+    # 如果已有摘要，直接返回原内容（不做任何修改）
     if analysis["has_summary"]:
         return content
 
     # 找到插入位置
     insert_pos = find_insert_position_below_frontmatter(content)
     if insert_pos is None:
+        # 没有 frontmatter，尝试找第一个标题
         first_heading_match = re.search(r"^# .+$", content, re.MULTILINE)
         if first_heading_match:
             insert_pos = first_heading_match.end() + 1
         else:
+            # 没有标题也没有 frontmatter，插入到最前面
             insert_pos = 0
 
     # 生成摘要
     summary = generate_summary(analysis["title"], analysis["headings"], analysis["paragraphs"])
 
-    # 插入摘要
+    # 插入摘要（保持前面的 frontmatter 完整）
     enhanced_content = (
         content[:insert_pos] + "\n" + summary + "\n" + content[insert_pos:]
     )
@@ -235,7 +250,7 @@ def main():
     elif command == "--enhance":
         enhanced = enhance_markdown_content(file_path)
 
-        # 写入增强后的内容
+        # 写入增强后的内容（保持所有原有内容，包括 frontmatter）
         output_path = Path(file_path)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(enhanced)

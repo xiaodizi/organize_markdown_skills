@@ -95,10 +95,9 @@ def extract_and_download_images(
             return ""
 
         # 跳过已经是本地图片的引用（保持原样）
-        if img_url.startswith(("./img/", "../img/", "/img/")) or img_url.startswith(
-            ("./", "../")
-        ):
-            print(f"  ⏭️  跳过本地图片: {img_url}")
+        # 检查是否已经是本地存储的图片路径
+        if img_url.startswith(("./img/", "../img/", "/img/")):
+            print(f"  ⏭️  跳过已存储的本地图片: {img_url}")
             return match.group(0)
 
         if not img_url.startswith(("http://", "https://")):

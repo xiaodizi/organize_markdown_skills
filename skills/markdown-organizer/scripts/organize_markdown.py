@@ -96,6 +96,12 @@ def extract_and_download_images(
         alt_text = match.group(1)
         img_url = match.group(2).strip()
 
+        # 跳过已经是本地图片的引用（保持原样）
+        # 检查是否已经是本地存储的图片路径
+        if img_url.startswith(("./img/", "../img/", "/img/")):
+            print(f"  ⏭️  跳过已存储的本地图片: {img_url}")
+            return match.group(0)
+
         # 处理相对 URL
         if not img_url.startswith(("http://", "https://", "/")):
             # 是相对路径，可能需要与 base_url 组合
