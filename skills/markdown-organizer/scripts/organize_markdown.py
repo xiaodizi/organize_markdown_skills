@@ -551,7 +551,7 @@ def remove_duplicate_frontmatter(content: str) -> str:
     web_clipper_blocks = []
     for info in frontmatter_info:
         block_type = info["type"]
-        
+
         # 优先规则：如果块包含 Obsidian 特定字段且出现在前面，就作为 obsidian 块
         # 即使它同时包含 Web Clipper 字段（这些字段可能为空）
         if block_type == "obsidian":
@@ -583,39 +583,42 @@ def remove_duplicate_frontmatter(content: str) -> str:
     for clipper_block in web_clipper_blocks:
         for key, value in clipper_block["data"].items():
             if key not in merged_data:
-                # 第一个块中没有这个字段，直接添加
                 merged_data[key] = value
             elif key == "title":
-                # 对于 title 字段，智能选择：优先使用有意义的
                 existing_title = str(merged_data.get(key, "")).strip()
                 new_title = str(value).strip() if value else ""
-
-                # 如果现有 title 无意义（"未命名"或空），则使用新的
+                # 只要 obsidian 的 title 是空或“未命名”，就用 Web Clipper 的 title 覆盖
                 if not existing_title or existing_title == "未命名":
                     if new_title and new_title != "未命名":
                         merged_data[key] = value
-            elif isinstance(value, list) and isinstance(merged_data.get(key), list):
-                # 如果都是列表，去重后合并（保留顺序）
-                merged_list = list(merged_data[key])
-                for item in value:
-                    if item not in merged_list:
-                        merged_list.append(item)
-                merged_data[key] = merged_list
+            elif key == "tags":
+                # 合并去重，保留顺序
+                tags1 = merged_data.get("tags", [])
+                tags2 = value or []
+                if not isinstance(tags1, list):
+                    tags1 = [tags1] if tags1 else []
+                if not isinstance(tags2, list):
+                    tags2 = [tags2] if tags2 else []
+                merged_tags = []
+                seen = set()
+                for tag in tags1 + tags2:
+                    tag_str = str(tag).strip()
+                    if tag_str and tag_str not in seen:
+                        merged_tags.append(tag_str)
+                        seen.add(tag_str)
+                merged_data["tags"] = merged_tags
             else:
-                # 对于其他字段，如果现有值为空，用新值覆盖
                 existing_value = merged_data.get(key, "")
-
-                # 检查现有值是否为"空"（空字符串、空列表、None 等）
+                # 判断 obsidian 的值是否为空（空字符串、空列表、None）
                 is_empty = (
                     existing_value == ""
                     or existing_value is None
                     or (isinstance(existing_value, list) and len(existing_value) == 0)
                 )
-
-                if is_empty and value:
-                    # 现有值为空，且新值不为空，则用新值覆盖
+                # 只要 obsidian 的值为空，就用 Web Clipper 的值覆盖
+                if is_empty and value not in (None, "", []):
                     merged_data[key] = value
-                # 否则保留第一个块的值
+                # 否则保留 obsidian 的原值
 
     # 重新生成 frontmatter
     new_frontmatter_text = yaml.dump(
