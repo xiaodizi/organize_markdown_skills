@@ -32,7 +32,7 @@ repository: https://github.com/xiaodizi/organize_markdown_skills.git
 
 ## 功能特性
 
-- **Web Clipper 支持**：自动处理 Obsidian Web Clipper 元数据，合并 frontmatter，生成文档标题
+- **Web Clipper 支持**：自动处理 Obsidian Web Clipper 元数据，合并 frontmatter，从 title 字段生成一级标题
 - 自动下载图片到本地 `img` 文件夹
 - 更新图片引用为本地路径
 - 美化 Markdown 格式（标题空行、列表规范化等）

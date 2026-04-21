@@ -90,20 +90,37 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
 
-1. **提取 Web Clipper 属性**：
-   - 识别 YAML frontmatter 中的 `title`、`source`、`author`、`published` 等字段
-   - 将这些属性合并到文档现有的 frontmatter
-
-2. **生成文档标题**：
-   - 如果 frontmatter 中有 `title` 字段，在 frontmatter 后面添加 `# title内容` 作为一级标题
-   - 删除已处理的 Web Clipper 临时元数据部分
-
-3. **合并 frontmatter**：
-   - 保留 Web Clipper 的属性（title, source, author, published, tags 等）
+1. **合并 frontmatter**：
+   - 识别 YAML frontmatter 中的 Web Clipper 属性（`title`、`source`、`author`、`published` 等）
+   - 将这些属性与文档现有的 frontmatter 合并
    - 如果现有 frontmatter 已有相同字段，以现有内容为准
-   - 确保最终 frontmatter 格式正确
+   - 保留 `title` 字段在 frontmatter 中
 
-**如果文档没有 Web Clipper 元数据，直接跳过此步骤。**
+2. **生成文档一级标题**：
+   - 在 frontmatter 的结束标记（`---`）之后，插入一个空行
+   - 然后插入 `# {title字段内容}` 作为文档的一级标题
+   - 确保标题和原文内容之间有一个空行
+   - 例如：如果 title 是 "AI Knowledge Layer"，则插入 `# AI Knowledge Layer`
+
+3. **清理和验证**：
+   - 删除已处理的 Web Clipper 临时元数据部分（如果有）
+   - 检查 frontmatter 格式正确（YAML 语法无误）
+   - 确保生成的文档结构清晰
+
+**文件结构示例**：
+```yaml
+---
+title: AI Knowledge Layer
+source: https://example.com
+author: Author Name
+---
+
+# AI Knowledge Layer
+
+原文内容...
+```
+
+**如果文档没有 Web Clipper 元数据或没有 `title` 字段，直接跳过此步骤。**
 
 ### 第一步：分析文档内容
 

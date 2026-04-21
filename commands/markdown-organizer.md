@@ -27,20 +27,37 @@ description: 组织和美化 markdown 文档，自动下载图片到本地 img �
 
 如果文件顶部包含 Web Clipper 格式的元数据（title, source, author, published 等）：
 
-1. **提取 Web Clipper 属性**：
-   - 识别格式：YAML frontmatter 中包含 `title`、`source`、`author`、`published` 等字段
-   - 将这些属性合并到文档现有的 frontmatter
+1. **合并 frontmatter**：
+   - 识别 YAML frontmatter 中的 Web Clipper 属性（`title`、`source`、`author`、`published` 等）
+   - 将这些属性与文档现有的 frontmatter 合并
+   - 如果现有 frontmatter 已有相同字段，以现有内容为准
+   - 保留 `title` 字段在 frontmatter 中
 
-2. **生成文档标题**：
-   - 如果 frontmatter 中有 `title` 字段，在 frontmatter 后面添加 `# title内容` 作为文档的一级标题
-   - 删除已处理的 Web Clipper 临时元数据部分
+2. **生成文档一级标题**：
+   - 在 frontmatter 结束（`---`）之后插入一个空行
+   - 然后插入 `# {title字段内容}` 作为文档的一级标题
+   - 例如：如果 title 是 "AI Knowledge Layer"，则插入 `# AI Knowledge Layer`
 
-3. **合并 frontmatter**：
-   - 将 Web Clipper 的 `title` 字段保留在 frontmatter 中
-   - 其他属性（source, author, published, tags 等）也保留
-   - 如果现有 frontmatter 中已有相同字段，以现有内容为准
+3. **清理**：
+   - 删除已处理的 Web Clipper 临时元数据部分（如果有）
+   - 确保标题和后面的内容之间有一个空行
 
-**注意**：如果文档没有 Web Clipper 元数据，直接跳过此步骤。
+**文件结构示例**：
+```
+---
+title: AI Knowledge Layer
+source: https://example.com
+author: Author Name
+published: 2026-04-21
+---
+
+# AI Knowledge Layer
+
+## 摘要
+...
+```
+
+**注意**：如果文档没有 Web Clipper 元数据或没有 `title` 字段，直接跳过此步骤。
 
 ### 步骤 1：读取并分析文档
 
