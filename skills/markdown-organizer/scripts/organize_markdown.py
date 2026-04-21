@@ -550,12 +550,26 @@ def remove_duplicate_frontmatter(content: str) -> str:
     obsidian_block = None
     web_clipper_blocks = []
     for info in frontmatter_info:
-        if info["type"] == "obsidian":
-            obsidian_block = info
-        elif info["type"] in ["web_clipper", "mixed"]:
+        block_type = info["type"]
+        
+        # 优先规则：如果块包含 Obsidian 特定字段且出现在前面，就作为 obsidian 块
+        # 即使它同时包含 Web Clipper 字段（这些字段可能为空）
+        if block_type == "obsidian":
+            if obsidian_block is None:
+                obsidian_block = info
+            else:
+                web_clipper_blocks.append(info)
+        elif block_type == "mixed":
+            # mixed 类型的块，检查是否是第一个块（应该保留）
+            if obsidian_block is None:
+                # 第一个 mixed 块作为 obsidian 块，后续的作为 web_clipper 块
+                obsidian_block = info
+            else:
+                web_clipper_blocks.append(info)
+        elif block_type == "web_clipper":
             web_clipper_blocks.append(info)
 
-    # 如果没找到 obsidian 块，使用第一个块
+    # 如果没找到任何块，使用第一个块
     if obsidian_block is None and frontmatter_info:
         obsidian_block = frontmatter_info[0]
         web_clipper_blocks = frontmatter_info[1:]
@@ -590,14 +604,14 @@ def remove_duplicate_frontmatter(content: str) -> str:
             else:
                 # 对于其他字段，如果现有值为空，用新值覆盖
                 existing_value = merged_data.get(key, "")
-                
+
                 # 检查现有值是否为"空"（空字符串、空列表、None 等）
                 is_empty = (
-                    existing_value == "" 
-                    or existing_value is None 
+                    existing_value == ""
+                    or existing_value is None
                     or (isinstance(existing_value, list) and len(existing_value) == 0)
                 )
-                
+
                 if is_empty and value:
                     # 现有值为空，且新值不为空，则用新值覆盖
                     merged_data[key] = value
