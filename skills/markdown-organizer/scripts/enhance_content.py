@@ -1,5 +1,257 @@
 #!/usr/bin/env python3
 """
+Markdown 文档增强工具
+
+功能：
+1. 分析文档结构和内容
+2. 基于文档内容自动生成简洁的摘要
+3. 将摘要插入到文档顶部（frontmatter之后）
+"""
+
+import re
+import sys
+from pathlib import Path
+from typing import Dict, List
+
+
+def analyze_document(file_path: str | Path) -> Dict:
+    """分析文档结构，返回分析结果"""
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    lines = content.split("\n")
+
+    analysis = {
+        "title": "",
+        "headings": [],
+        "paragraphs": [],
+        "code_blocks": [],
+        "has_summary": False,
+    }
+
+    # 提取标题（第一个 # 标题）
+    for line in lines:
+        if line.startswith("# "):
+            analysis["title"] = line[2:].strip()
+            break
+
+    # 提取所有标题层级
+    for i, line in enumerate(lines):
+        match = re.match(r"^(#{1,6})\s+(.+)$", line)
+        if match:
+            level = len(match.group(1))
+            heading = match.group(2).strip()
+            analysis["headings"].append({"level": level, "text": heading, "line": i + 1})
+
+    # 提取段落（首个大标题后、代码块外的文本）
+    in_code_block = False
+    in_frontmatter = False
+    first_heading_found = False
+
+    for i, line in enumerate(lines):
+        # 处理frontmatter
+        if i == 0 and line.startswith("---"):
+            in_frontmatter = True
+            continue
+        if in_frontmatter and line.startswith("---"):
+            in_frontmatter = False
+            continue
+        if in_frontmatter:
+            continue
+
+        # 处理代码块
+        if line.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+
+        # 检测首个大标题
+        if re.match(r"^# ", line):
+            first_heading_found = True
+            continue
+
+        # 提取首个标题后的段落
+        if first_heading_found and line.strip() and not re.match(r"^#+\s", line):
+            analysis["paragraphs"].append(line.strip())
+
+    # 检测是否已有摘要
+    for heading in analysis["headings"]:
+        text_lower = heading["text"].lower()
+        if text_lower.strip() == "摘要" or text_lower.strip() == "概述" or text_lower.strip() == "summary":
+            analysis["has_summary"] = True
+            break
+
+    return analysis
+
+
+def extract_key_topics(headings: List[Dict], paragraphs: List[str]) -> List[str]:
+    """从文档中提取关键话题"""
+    topics = []
+
+    # 从二级标题提取主要话题
+    for heading in headings:
+        if heading["level"] == 2:  # ## 标题
+            topic = heading["text"]
+            # 去除特殊标题
+            if topic.lower() not in ["摘要", "概述", "summary", "介绍"]:
+                topics.append(topic)
+
+    return topics[:5]  # 限制到前5个话题
+
+
+def extract_key_sentences(paragraphs: List[str], limit: int = 2) -> List[str]:
+    """从段落中提取关键句子"""
+    sentences = []
+
+    for para in paragraphs[:5]:  # 只看前5个段落
+        # 分割句子
+        para_sentences = re.split(r'[。！？；:：]', para)
+        for sent in para_sentences:
+            sent = sent.strip()
+            if len(sent) > 10:  # 至少10个字符
+                sentences.append(sent)
+                if len(sentences) >= limit:
+                    return sentences
+
+    return sentences
+
+
+def generate_summary(title: str, headings: List[Dict], paragraphs: List[str]) -> str:
+    """基于文档内容生成摘要"""
+    lines = []
+    lines.append("## 摘要")
+    lines.append("")
+
+    # 生成摘要内容
+    summary_parts = []
+
+    # 1. 主标题作为主题
+    if title:
+        summary_parts.append(f"本文介绍了 {title} 的相关内容。")
+
+    # 2. 提取关键话题
+    topics = extract_key_topics(headings, paragraphs)
+    if topics:
+        topics_str = "、".join(topics)
+        summary_parts.append(f"主要涵盖以下方面：{topics_str}。")
+
+    # 3. 提取关键句子
+    key_sentences = extract_key_sentences(paragraphs, limit=1)
+    if key_sentences:
+        summary_parts.append(f"文档的核心内容：{key_sentences[0]}。")
+
+    # 4. 统计信息
+    level2_headings = [h for h in headings if h["level"] == 2]
+    if level2_headings:
+        summary_parts.append(f"全文共包含 {len(level2_headings)} 个主要章节。")
+
+    # 拼接摘要
+    if summary_parts:
+        lines.append("".join(summary_parts))
+    else:
+        lines.append("本文档提供了详细的技术信息和实践指导。")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def find_insert_position_below_frontmatter(content: str) -> int | None:
+    """返回 frontmatter 结束后的插入位置"""
+    frontmatter_match = re.match(r"\A---\s*\n.*?\n---\s*(?:\n|\Z)", content, re.DOTALL)
+    if frontmatter_match:
+        return frontmatter_match.end()
+    return None
+
+
+def enhance_markdown_content(file_path: str | Path) -> str:
+    """增强 markdown 内容：添加摘要"""
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    analysis = analyze_document(file_path)
+
+    # 如果已有摘要，直接返回
+    if analysis["has_summary"]:
+        return content
+
+    # 找到插入位置
+    insert_pos = find_insert_position_below_frontmatter(content)
+    if insert_pos is None:
+        first_heading_match = re.search(r"^# .+$", content, re.MULTILINE)
+        if first_heading_match:
+            insert_pos = first_heading_match.end() + 1
+        else:
+            insert_pos = 0
+
+    # 生成摘要
+    summary = generate_summary(analysis["title"], analysis["headings"], analysis["paragraphs"])
+
+    # 插入摘要
+    enhanced_content = (
+        content[:insert_pos] + "\n" + summary + "\n" + content[insert_pos:]
+    )
+
+    # 规范标题前空行
+    enhanced_content = re.sub(r"([^\n])\n(#{1,6}\s)", r"\1\n\n\2", enhanced_content)
+
+    # 确保文件以换行结束
+    enhanced_content = enhanced_content.rstrip("\n") + "\n"
+
+    return enhanced_content
+
+
+def main():
+    """命令行入口"""
+    if len(sys.argv) < 2:
+        print("用法:")
+        print("  分析文档结构:")
+        print("    python enhance_content.py --analyze <markdown文件路径>")
+        print("  自动增强内容:")
+        print("    python enhance_content.py --enhance <markdown文件路径>")
+        sys.exit(1)
+
+    command = sys.argv[1]
+    file_path = sys.argv[2] if len(sys.argv) > 2 else None
+
+    if not file_path:
+        print("错误: 请指定 markdown 文件路径")
+        sys.exit(1)
+
+    if command == "--analyze":
+        analysis = analyze_document(file_path)
+        print(f"文档分析结果: {file_path}")
+        print(f"- 标题: {analysis['title']}")
+        print(f"- 标题层级数: {len(analysis['headings'])}")
+        print(f"- 段落数: {len(analysis['paragraphs'])}")
+        print(f"- 已有摘要: {'是' if analysis['has_summary'] else '否'}")
+
+    elif command == "--enhance":
+        enhanced = enhance_markdown_content(file_path)
+
+        # 写入增强后的内容
+        output_path = Path(file_path)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(enhanced)
+
+        print(f"✅ 内容增强完成: {output_path}")
+
+    else:
+        print(f"未知命令: {command}")
+        print("支持的命令: --analyze, --enhance")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+#!/usr/bin/env python3
+"""
 Markdown 内容增强辅助工具
 
 功能：
