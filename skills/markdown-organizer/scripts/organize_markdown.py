@@ -253,6 +253,44 @@ def clean_duplicate_metadata(content: str) -> str:
         return content
 
 
+def remove_duplicate_frontmatter(content: str) -> str:
+    """
+    删除所有重复的 frontmatter，只保留顶部的第一个
+
+    某些笔记（如 Web Clipper 导出）可能包含多个 frontmatter 块
+    此函数保留第一个，删除其余的
+    """
+    # 匹配所有 frontmatter 块：--- ... ---
+    frontmatter_pattern = r"^---\s*\n(.*?)\n---\s*(?:\n|$)"
+    matches = list(re.finditer(frontmatter_pattern, content, re.DOTALL))
+
+    if len(matches) <= 1:
+        # 没有重复，直接返回
+        return content
+
+    # 保留第一个 frontmatter，删除其后的所有 frontmatter 块
+    first_match = matches[0]
+    result = content[: first_match.end()]
+
+    # 从第一个 frontmatter 之后开始处理内容
+    remaining_content = content[first_match.end() :]
+
+    # 删除 remaining_content 中的所有 frontmatter 块
+    remaining_content = re.sub(
+        frontmatter_pattern, "", remaining_content, flags=re.DOTALL
+    )
+
+    # 删除开头的空行
+    remaining_content = remaining_content.lstrip()
+
+    result = result + remaining_content
+
+    duplicate_count = len(matches) - 1
+    print(f"  ✅ 已删除 {duplicate_count} 个重复的 frontmatter 块")
+
+    return result
+
+
 def fix_yaml_frontmatter(content: str) -> str:
     """
     检测并修复 YAML frontmatter 中的缩进问题
@@ -421,6 +459,10 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     print(f"\n📖 读取文件: {file_path}")
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
+
+    # 删除重复的 frontmatter，只保留顶部的第一个
+    print("\n🧹 删除重复的 frontmatter...")
+    content = remove_duplicate_frontmatter(content)
 
     # 从 frontmatter 中提取 title 作为图片前缀
     title_prefix = extract_title_from_frontmatter(content)
