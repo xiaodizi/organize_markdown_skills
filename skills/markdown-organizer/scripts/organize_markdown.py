@@ -476,124 +476,47 @@ def remove_duplicate_frontmatter(content: str) -> str:
     某些笔记（如 Web Clipper 导出）可能包含多个 frontmatter 块。
     此函数会智能识别块的类型并正确合并，确保笔记属性留在顶部。
     """
-    lines = content.split("\n")
-
-    # 找到所有 frontmatter 块的位置
-    frontmatter_blocks = []
-    i = 0
-    while i < len(lines):
-        if lines[i].strip() == "---":
-            # 找到一个开始标记
-            start = i
-            i += 1
-            # 找到结束标记
-            while i < len(lines) and lines[i].strip() != "---":
-                i += 1
-            if i < len(lines):
-                # 找到了结束标记
-                end = i
-                frontmatter_blocks.append((start, end))
-                i += 1
-            else:
-                break
-        else:
-            i += 1
-
-    if len(frontmatter_blocks) <= 1:
-        # 没有重复的 frontmatter，直接返回
+    # 全局查找所有 frontmatter 块（--- ... ---），不局限于顶部
+    fm_spans = []
+    for m in re.finditer(r"^---\s*$", content, re.MULTILINE):
+        fm_spans.append(m.start())
+    # 必须成对出现
+    if len(fm_spans) < 2:
         return content
+    if len(fm_spans) % 2 != 0:
+        print("⚠️ frontmatter 分隔符数量不为偶数，忽略最后一个")
+        fm_spans = fm_spans[: len(fm_spans) // 2 * 2]
 
-    # 有多个 frontmatter 块，需要合并
-    print(f"  ℹ️ 检测到 {len(frontmatter_blocks)} 个 frontmatter 块，分析类型...")
-
-    # 解析所有 frontmatter 块并识别类型
-    frontmatter_info = []
-    for block_idx, (start, end) in enumerate(frontmatter_blocks):
-        frontmatter_text = "\n".join(lines[start + 1 : end])
+    # 提取所有 frontmatter 块内容
+    fm_blocks = []
+    for i in range(0, len(fm_spans), 2):
+        start = fm_spans[i]
+        end = fm_spans[i + 1]
+        fm_text = content[start + 3 : end].strip("\n")
         try:
-            data = yaml.safe_load(frontmatter_text)
+            data = yaml.safe_load(fm_text)
             if isinstance(data, dict):
-                block_type = identify_frontmatter_type(data)
-                frontmatter_info.append(
-                    {
-                        "index": block_idx,
-                        "start": start,
-                        "end": end,
-                        "type": block_type,
-                        "data": data,
-                    }
-                )
-                print(f"    块 {block_idx + 1}: {block_type}")
-            else:
-                frontmatter_info.append(
-                    {
-                        "index": block_idx,
-                        "start": start,
-                        "end": end,
-                        "type": "invalid",
-                        "data": {},
-                    }
-                )
-        except yaml.YAMLError as e:
-            print(f"    ⚠️ 块 {block_idx + 1} 解析失败: {str(e)[:30]}...")
-            frontmatter_info.append(
-                {
-                    "index": block_idx,
-                    "start": start,
-                    "end": end,
-                    "type": "invalid",
-                    "data": {},
-                }
-            )
+                fm_blocks.append(data)
+        except Exception as e:
+            print(f"⚠️ frontmatter 解析失败: {e}")
 
-    # 找到 obsidian 块和 web_clipper 块
-    obsidian_block = None
-    web_clipper_blocks = []
-    for info in frontmatter_info:
-        block_type = info["type"]
-
-        # 优先规则：如果块包含 Obsidian 特定字段且出现在前面，就作为 obsidian 块
-        # 即使它同时包含 Web Clipper 字段（这些字段可能为空）
-        if block_type == "obsidian":
-            if obsidian_block is None:
-                obsidian_block = info
-            else:
-                web_clipper_blocks.append(info)
-        elif block_type == "mixed":
-            # mixed 类型的块，检查是否是第一个块（应该保留）
-            if obsidian_block is None:
-                # 第一个 mixed 块作为 obsidian 块，后续的作为 web_clipper 块
-                obsidian_block = info
-            else:
-                web_clipper_blocks.append(info)
-        elif block_type == "web_clipper":
-            web_clipper_blocks.append(info)
-
-    # 如果没找到任何块，使用第一个块
-    if obsidian_block is None and frontmatter_info:
-        obsidian_block = frontmatter_info[0]
-        web_clipper_blocks = frontmatter_info[1:]
-
-    if obsidian_block is None:
+    if not fm_blocks:
         return content
 
-    # 合并所有数据到 obsidian 块
-    merged_data = dict(obsidian_block["data"])
-
-    for clipper_block in web_clipper_blocks:
-        for key, value in clipper_block["data"].items():
-            if key not in merged_data:
-                merged_data[key] = value
+    # 合并所有 frontmatter 字段
+    merged = dict(fm_blocks[0])
+    for block in fm_blocks[1:]:
+        for key, value in block.items():
+            if key not in merged:
+                merged[key] = value
             elif key == "title":
-                existing_title = str(merged_data.get(key, "")).strip()
+                existing_title = str(merged.get(key, "")).strip()
                 new_title = str(value).strip() if value else ""
-                # 只要 obsidian 的 title 是空或“未命名”，就用 Web Clipper 的 title 覆盖
                 if not existing_title or existing_title == "未命名":
                     if new_title and new_title != "未命名":
-                        merged_data[key] = value
+                        merged[key] = value
             elif key == "tags":
-                # 合并去重，保留顺序
-                tags1 = merged_data.get("tags", [])
+                tags1 = merged.get("tags", [])
                 tags2 = value or []
                 if not isinstance(tags1, list):
                     tags1 = [tags1] if tags1 else []
@@ -606,65 +529,44 @@ def remove_duplicate_frontmatter(content: str) -> str:
                     if tag_str and tag_str not in seen:
                         merged_tags.append(tag_str)
                         seen.add(tag_str)
-                merged_data["tags"] = merged_tags
+                merged["tags"] = merged_tags
             else:
-                existing_value = merged_data.get(key, "")
-                # 判断 obsidian 的值是否为空（空字符串、空列表、None）
+                existing_value = merged.get(key, "")
                 is_empty = (
                     existing_value == ""
                     or existing_value is None
                     or (isinstance(existing_value, list) and len(existing_value) == 0)
                 )
-                # 只要 obsidian 的值为空，就用 Web Clipper 的值覆盖
                 if is_empty and value not in (None, "", []):
-                    merged_data[key] = value
-                # 否则保留 obsidian 的原值
+                    merged[key] = value
 
-    # 重新生成 frontmatter
-    new_frontmatter_text = yaml.dump(
-        merged_data,
-        default_flow_style=False,
-        allow_unicode=True,
-        sort_keys=False,
+    # 生成新的 frontmatter yaml
+    new_fm = yaml.dump(
+        merged, default_flow_style=False, allow_unicode=True, sort_keys=False
     ).rstrip()
 
-    # 构建新内容：保留 obsidian 块的位置，删除其他所有 frontmatter 块
-    obsidian_start, obsidian_end = obsidian_block["start"], obsidian_block["end"]
+    # 删除所有原 frontmatter 块，只保留正文
+    # 先记录所有 frontmatter 块的起止位置
+    fm_ranges = []
+    for i in range(0, len(fm_spans), 2):
+        fm_start = fm_spans[i]
+        fm_end = fm_spans[i + 1] + 3  # 包含 ---
+        fm_ranges.append((fm_start, fm_end))
 
-    # 将所有其他 frontmatter 块的行号集合（用于快速查找和跳过）
-    other_frontmatter_lines = set()
-    for info in frontmatter_info:
-        if info != obsidian_block:
-            for line_idx in range(info["start"], info["end"] + 1):
-                other_frontmatter_lines.add(line_idx)
+    # 拼接正文（去掉所有 frontmatter 块）
+    body_parts = []
+    last = 0
+    for start, end in fm_ranges:
+        if last < start:
+            body_parts.append(content[last:start])
+        last = end
+    if last < len(content):
+        body_parts.append(content[last:])
+    body = "".join(body_parts).lstrip("\n")
 
-    # 删除所有其他 frontmatter 块
-    result_lines = []
-    result_lines.extend(lines[:obsidian_start])  # obsidian 块之前的内容
-    result_lines.append("---")
-    result_lines.extend(new_frontmatter_text.split("\n"))
-    result_lines.append("---")
-
-    # 从 obsidian 块之后开始添加内容，跳过其他 frontmatter 块的所有行
-    for i in range(obsidian_end + 1, len(lines)):
-        if i not in other_frontmatter_lines:
-            result_lines.append(lines[i])
-
-    result = "\n".join(result_lines)
-
-    duplicate_count = len(frontmatter_blocks) - 1
-    print(f"  ✅ 已合并 {duplicate_count} 个 frontmatter 块到笔记属性中")
-    if "tags" in merged_data:
-        tags_str = (
-            ", ".join(merged_data["tags"])
-            if isinstance(merged_data["tags"], list)
-            else str(merged_data["tags"])
-        )
-        print(f"    📌 保留了 tags 属性: [{tags_str}]")
-
-    # 显示合并后的属性
-    print(f"    📋 合并后的属性: {', '.join(sorted(merged_data.keys()))}")
-
+    # 新 frontmatter + 正文
+    result = f"---\n{new_fm}\n---\n\n{body}"
+    print(f"  ✅ 已全局合并 {len(fm_blocks)} 个 frontmatter 块")
     return result
 
 
