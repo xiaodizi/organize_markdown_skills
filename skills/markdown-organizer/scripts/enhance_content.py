@@ -160,24 +160,43 @@ def generate_summary(title: str, headings: List[Dict], paragraphs: List[str]) ->
 
 
 def find_insert_position_below_frontmatter(content: str) -> int | None:
-    """返回 frontmatter 结束后的插入位置"""
+    """返回 frontmatter 结束后的插入位置
+    
+    优先级：
+    1. 如果有一级标题，在一级标题之后
+    2. 否则在 frontmatter 之后
+    """
     lines = content.split("\n")
 
     # 文档必须以 --- 开头
     if not lines or lines[0].strip() != "---":
         return None
 
-    # 查找结束标记 ---
+    # 查找 frontmatter 结束标记 ---
+    frontmatter_end = None
     for i in range(1, len(lines)):
         if lines[i].strip() == "---":
-            # 找到了结束标记，计算其在原文中的位置
-            # 从行索引转换为字符位置
+            frontmatter_end = i
+            break
+    
+    if frontmatter_end is None:
+        return None
+    
+    # 检查 frontmatter 之后是否有一级标题
+    for i in range(frontmatter_end + 1, len(lines)):
+        if lines[i].startswith("# ") and not lines[i].startswith("## "):
+            # 找到一级标题，在它之后插入
+            # 计算位置
             position = 0
-            for j in range(i + 1):  # 包括结束的 --- 行
+            for j in range(i + 1):
                 position += len(lines[j]) + 1  # +1 for newline character
             return position
-
-    return None
+    
+    # 没有找到一级标题，在 frontmatter 后插入
+    position = 0
+    for j in range(frontmatter_end + 1):  # 包括结束的 --- 行
+        position += len(lines[j]) + 1  # +1 for newline character
+    return position
 
 
 def enhance_markdown_content(file_path: str | Path) -> str:
@@ -204,6 +223,18 @@ def enhance_markdown_content(file_path: str | Path) -> str:
         else:
             # 没有标题也没有 frontmatter，插入到最前面
             insert_pos = 0
+    else:
+        # 如果find_insert_position_below_frontmatter返回的位置，再次检查是否真的在一级标题之后
+        # 这是为了处理一些edge case
+        # 获取当前位置后的内容
+        content_after_pos = content[insert_pos:]
+        # 检查是否紧接着是一级标题
+        if not content_after_pos.lstrip().startswith("# "):
+            # 没有一级标题紧跟着，尝试找下一个一级标题
+            h1_match = re.search(r"^# .+$", content_after_pos, re.MULTILINE)
+            if h1_match:
+                # 找到了一级标题，调整插入位置到该标题之后
+                insert_pos = insert_pos + h1_match.end() + 1
 
     # 生成摘要
     summary = generate_summary(analysis["title"], analysis["headings"], analysis["paragraphs"])
