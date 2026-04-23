@@ -378,6 +378,8 @@ def clean_duplicate_metadata(content: str) -> str:
 
     保留有意义的 title（来自 Web Clipper），但删除无意义的 title（如"未命名"）
     这样一级标题 (# 标题) 可以从有意义的 title 生成
+
+    注意：此函数应该在 remove_duplicate_frontmatter 之后调用
     """
     try:
         frontmatter_match = re.match(
@@ -406,16 +408,16 @@ def clean_duplicate_metadata(content: str) -> str:
         # 保留有意义的 title（来自 Web Clipper）
         if not title_str or title_str == "未命名":
             del frontmatter_data["title"]
-            print("  ✅ 已删除无意义的 title 字段")
+            print("    ✅ 已删除无意义的 title 字段")
         else:
-            # 保留有意义的 title，使其为frontmatter的第一个字段
+            # 保留有意义的 title，使其为 frontmatter 的第一个字段
             sorted_data = {}
             sorted_data["title"] = frontmatter_data["title"]
             for key, value in frontmatter_data.items():
                 if key != "title":
                     sorted_data[key] = value
             frontmatter_data = sorted_data
-            print(f"  ✅ 保留了有意义的 title: {title_str}")
+            print(f"    ✅ 保留了有意义的 title: {title_str}")
 
         # 重新生成 frontmatter
         new_frontmatter_text = yaml.dump(
@@ -432,7 +434,7 @@ def clean_duplicate_metadata(content: str) -> str:
         return new_content
 
     except Exception as e:
-        print(f"  ⚠️ 清理元数据失败: {e}")
+        print(f"    ⚠️ 清理元数据失败: {e}")
         return content
 
 
@@ -475,16 +477,22 @@ def remove_duplicate_frontmatter(content: str) -> str:
 
     某些笔记（如 Web Clipper 导出）可能包含多个 frontmatter 块。
     此函数会智能识别块的类型并正确合并，确保笔记属性留在顶部。
+
+    合并优先级：
+    1. 第一个块（通常是 Obsidian 属性）作为基础
+    2. 后续块（通常是 Web Clipper）的非空值会覆盖空值
+    3. 特殊字段处理：title、tags、author、source 等有特殊逻辑
     """
     # 全局查找所有 frontmatter 块（--- ... ---），不局限于顶部
     fm_spans = []
     for m in re.finditer(r"^---\s*$", content, re.MULTILINE):
         fm_spans.append(m.start())
+
     # 必须成对出现
     if len(fm_spans) < 2:
         return content
     if len(fm_spans) % 2 != 0:
-        print("⚠️ frontmatter 分隔符数量不为偶数，忽略最后一个")
+        print("  ⚠️ frontmatter 分隔符数量不为偶数，忽略最后一个")
         fm_spans = fm_spans[: len(fm_spans) // 2 * 2]
 
     # 提取所有 frontmatter 块内容
@@ -497,25 +505,42 @@ def remove_duplicate_frontmatter(content: str) -> str:
             data = yaml.safe_load(fm_text)
             if isinstance(data, dict):
                 fm_blocks.append(data)
+                print(
+                    f"    📍 找到第 {i//2 + 1} 个 frontmatter 块，包含字段: {list(data.keys())}"
+                )
         except Exception as e:
-            print(f"⚠️ frontmatter 解析失败: {e}")
+            print(f"    ⚠️ frontmatter 块 {i//2 + 1} 解析失败: {e}")
 
     if not fm_blocks:
         return content
 
+    # Web Clipper 特定字段
+    web_clipper_fields = {"source", "author", "published", "description"}
+
     # 合并所有 frontmatter 字段
     merged = dict(fm_blocks[0])
-    for block in fm_blocks[1:]:
+    print(f"    🔀 开始合并 {len(fm_blocks)} 个 frontmatter 块...")
+
+    for block_idx, block in enumerate(fm_blocks[1:], 1):
+        print(f"    → 处理第 {block_idx + 1} 个块...")
         for key, value in block.items():
             if key not in merged:
+                # 新字段直接添加
                 merged[key] = value
+                print(f"      ✅ 新增字段: {key} = {str(value)[:50]}")
             elif key == "title":
+                # title 字段：优先保留有意义的标题
                 existing_title = str(merged.get(key, "")).strip()
                 new_title = str(value).strip() if value else ""
-                if not existing_title or existing_title == "未命名":
-                    if new_title and new_title != "未命名":
-                        merged[key] = value
+                if (
+                    (not existing_title or existing_title == "未命名")
+                    and new_title
+                    and new_title != "未命名"
+                ):
+                    merged[key] = value
+                    print(f"      ✅ 更新 title: {new_title[:50]}")
             elif key == "tags":
+                # tags 字段：合并并去重
                 tags1 = merged.get("tags", [])
                 tags2 = value or []
                 if not isinstance(tags1, list):
@@ -530,7 +555,25 @@ def remove_duplicate_frontmatter(content: str) -> str:
                         merged_tags.append(tag_str)
                         seen.add(tag_str)
                 merged["tags"] = merged_tags
-            else:
+                print(f"      ✅ 合并 tags: {merged_tags}")
+            elif key == "author":
+                # author 字段：特殊处理（可能是字符串或列表）
+                existing_author = merged.get(key, "")
+                is_existing_empty = (
+                    existing_author == ""
+                    or existing_author is None
+                    or (isinstance(existing_author, list) and len(existing_author) == 0)
+                )
+                is_new_empty = (
+                    value == ""
+                    or value is None
+                    or (isinstance(value, list) and len(value) == 0)
+                )
+                if is_existing_empty and not is_new_empty:
+                    merged[key] = value
+                    print(f"      ✅ 更新 author: {str(value)[:50]}")
+            elif key in web_clipper_fields:
+                # Web Clipper 字段：只要新值非空就用新值覆盖
                 existing_value = merged.get(key, "")
                 is_empty = (
                     existing_value == ""
@@ -539,6 +582,25 @@ def remove_duplicate_frontmatter(content: str) -> str:
                 )
                 if is_empty and value not in (None, "", []):
                     merged[key] = value
+                    print(f"      ✅ 填充 {key}: {str(value)[:50]}")
+                elif (
+                    not is_empty
+                    and value not in (None, "", [])
+                    and existing_value != value
+                ):
+                    # 如果都有值但不同，优先保留现有值（Obsidian 优先）
+                    print(f"      ℹ️ 保留现有 {key}（Web Clipper 值被忽略）")
+            else:
+                # 其他字段：空值覆盖原则
+                existing_value = merged.get(key, "")
+                is_empty = (
+                    existing_value == ""
+                    or existing_value is None
+                    or (isinstance(existing_value, list) and len(existing_value) == 0)
+                )
+                if is_empty and value not in (None, "", []):
+                    merged[key] = value
+                    print(f"      ✅ 更新 {key}: {str(value)[:50]}")
 
     # 生成新的 frontmatter yaml
     new_fm = yaml.dump(
@@ -566,7 +628,9 @@ def remove_duplicate_frontmatter(content: str) -> str:
 
     # 新 frontmatter + 正文
     result = f"---\n{new_fm}\n---\n\n{body}"
-    print(f"  ✅ 已全局合并 {len(fm_blocks)} 个 frontmatter 块")
+    print(
+        f"  ✅ 已全局合并 {len(fm_blocks)} 个 frontmatter 块，合并后字段数: {len(merged)}"
+    )
     return result
 
 
@@ -740,39 +804,39 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
         content = f.read()
 
     # 删除重复的 frontmatter，只保留顶部的第一个
-    print("\n🧹 删除重复的 frontmatter...")
+    print("\n🧹 第1步：处理重复的 frontmatter...")
     content = remove_duplicate_frontmatter(content)
 
     # 从 frontmatter 中提取 title 作为图片前缀
     title_prefix = extract_title_from_frontmatter(content)
     if title_prefix:
-        print(f"📌 图片前缀: {title_prefix}")
+        print(f"  📌 图片前缀: {title_prefix}")
 
     # 修复 YAML frontmatter 格式问题
-    print("\n🔧 检查 YAML 格式...")
+    print("\n🔧 第2步：检查和修复 YAML 格式...")
     content = fix_yaml_frontmatter(content)
 
     # 清理重复的元数据（删除 frontmatter 中的 title 字段）
-    print("\n🧹 清理重复元数据...")
+    print("\n🧹 第3步：清理重复元数据...")
     content = clean_duplicate_metadata(content)
 
     # 提取并下载图片
-    print("\n🔍 搜索并下载图片...")
+    print("\n🔍 第4步：搜索并下载图片...")
     content = extract_and_download_images(
         content, base_url, img_dir, prefix=title_prefix
     )
 
     # 美化 markdown
-    print("\n✨ 美化 Markdown 格式...")
+    print("\n✨ 第5步：美化 Markdown 格式...")
     content = beautify_markdown(content)
 
     # 写回文件
-    print(f"\n💾 写入文件: {file_path}")
+    print(f"\n💾 保存文件: {file_path}")
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     # 调用 enhance_content.py 进行内容增强（先生成增强内容）
-    print("\n📝 内容增强...")
+    print("\n📝 第6步：内容增强...")
     script_dir = Path(__file__).parent
     enhance_script = script_dir / "enhance_content.py"
     if enhance_script.exists():
@@ -792,7 +856,7 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
         print("  ⚠️ enhance_content.py 未找到，跳过内容增强")
 
     # 处理 Web Clipper 元数据：确保有一级标题（放在最后，在所有增强内容之后）
-    print("\n📝 处理 Web Clipper 元数据...")
+    print("\n📝 第7步：处理 Web Clipper 元数据...")
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
     content = ensure_h1_title_after_enhancements(content)
