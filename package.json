@@ -1,6 +1,6 @@
 {
   "name": "organize-markdown-skills",
-  "version": "1.0.9-alpha.1",
+  "version": "1.0.9",
   "description": "组织和美化从网页复制的 Markdown 文档，自动下载图片到本地并更新引用，支持 URL 直接转换为 Markdown，支持转换为微信公众号 HTML 格式",
   "main": "index.js",
   "bin": {
