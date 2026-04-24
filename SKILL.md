@@ -1,5 +1,5 @@
 ---
-name: markdown-organizer
+name: organize_markdown
 description: Markdown 文档组织和美化工具。用于处理从网页复制的 markdown 文件：下载图片到本地 img 文件夹、更新图片引用为本地路径、美化 markdown 格式。支持通过 `/markdown-organizer @文件路径` 命令触发。
 ---
 
