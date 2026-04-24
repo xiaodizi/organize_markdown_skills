@@ -799,16 +799,22 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     """
     # 检查 Mermaid CLI (mmdc) 是否可用，不可用则自动静默安装
     import shutil
+
     def ensure_mermaid_cli():
         if shutil.which("mmdc") is not None:
             print("Mermaid CLI (mmdc) 已安装")
             return True
-        print("未检测到 Mermaid CLI (mmdc)，正在尝试自动安装 @mermaid-js/mermaid-cli ...")
+        print(
+            "未检测到 Mermaid CLI (mmdc)，正在尝试自动安装 @mermaid-js/mermaid-cli ..."
+        )
         try:
             import subprocess
-            result = subprocess.run([
-                "npm", "install", "-g", "@mermaid-js/mermaid-cli"
-            ], capture_output=True, text=True)
+
+            result = subprocess.run(
+                ["npm", "install", "-g", "@mermaid-js/mermaid-cli"],
+                capture_output=True,
+                text=True,
+            )
             if result.returncode == 0:
                 print("Mermaid CLI 安装成功")
                 return True
