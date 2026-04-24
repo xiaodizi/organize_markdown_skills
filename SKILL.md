@@ -1,3 +1,19 @@
+# Mermaid 生成标准 Prompt（推荐直接复制到 AI 指令/系统提示中）
+
+> 生成 Mermaid 代码时，所有节点内容都必须用英文双引号包裹（如 A["内容"]），节点 ID 只能用字母和数字，不能有括号、空格、点等特殊字符，subgraph 的 ID 不能和主节点重名。不允许裸写 add()、cognify()，必须写成 A["add()"]。
+
+**标准示例：**
+
+```mermaid
+graph TD
+   A["主节点"]
+   B["add()"]
+   C["cognify()"]
+   A --> B
+   A --> C
+```
+
+如需生成知识图谱、流程图等，务必遵循上述格式规范。
 ---
 name: organize_markdown
 description: Markdown 文档组织和美化技能。用于处理从网页复制的 markdown 文件：下载图片到本地 img 文件夹、更新图片引用为本地路径、美化 markdown 格式。支持通过 `/markdown-organizer @文件路径` 命令触发。
