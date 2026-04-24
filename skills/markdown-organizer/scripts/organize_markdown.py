@@ -2,8 +2,10 @@ import subprocess
 import sys
 
 # 自动检测并安装 requests 库
+
 import sys
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import requests
@@ -105,39 +107,61 @@ def download_image(url: str, img_dir: Path, prefix: str = "") -> str | None:
 def extract_and_download_images(
     content: str, base_url: str, img_dir: Path, prefix: str = ""
 ) -> str:
-    """提取并下载图片，返回更新后的内容。可选前缀用于图片文件名"""
-    # 匹配 markdown 图片语法: ![alt](url)
-    img_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
+    """
+    提取并并行下载图片，返回更新后的内容。可选前缀用于图片文件名
+    """
+    import threading
 
-    def replace_image(match):
+    img_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
+    matches = list(re.finditer(img_pattern, content))
+    results = [None] * len(matches)
+
+    # 记录每个图片的参数
+    tasks = []
+    for idx, match in enumerate(matches):
         alt_text = match.group(1)
         img_url = match.group(2).strip()
 
-        # 跳过已经是本地图片的引用（保持原样）
-        # 检查是否已经是本地存储的图片路径
+        # 跳过已是本地图片的引用
         if img_url.startswith(("./img/", "../img/", "/img/")):
-            print(f"  ⏭️  跳过已存储的本地图片: {img_url}")
-            return match.group(0)
+            results[idx] = match.group(0)
+            continue
 
         # 处理相对 URL
         if not img_url.startswith(("http://", "https://", "/")):
-            # 是相对路径，可能需要与 base_url 组合
             img_url = urllib.parse.urljoin(base_url, img_url)
 
-        # 下载图片
-        print(f"\n📥 处理图片: {img_url}")
-        filename = download_image(img_url, img_dir, prefix=prefix)
+        tasks.append((idx, alt_text, img_url))
 
+    # 下载函数
+    def download_task(idx, alt_text, img_url):
+        filename = download_image(img_url, img_dir, prefix=prefix)
         if filename:
-            # 返回本地引用
-            return f"![{alt_text}](./img/{filename})"
+            return idx, f"![{alt_text}](./img/{filename})"
         else:
             # 下载失败，保留原引用
-            return match.group(0)
+            return idx, matches[idx].group(0)
 
-    # 替换所有图片引用
-    updated_content = re.sub(img_pattern, replace_image, content)
-    return updated_content
+    # 多线程并行下载
+    max_workers = min(8, len(tasks)) if tasks else 1
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_idx = {
+            executor.submit(download_task, idx, alt_text, img_url): idx
+            for idx, alt_text, img_url in tasks
+        }
+        for future in as_completed(future_to_idx):
+            idx, result = future.result()
+            results[idx] = result
+
+    # 合成新内容
+    last_end = 0
+    new_content = ""
+    for i, match in enumerate(matches):
+        start, end = match.span()
+        new_content += content[last_end:start] + results[i]
+        last_end = end
+    new_content += content[last_end:]
+    return new_content
 
 
 def resolve_file_path(file_path: str | Path) -> Path:
