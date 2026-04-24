@@ -62,20 +62,16 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 
 组织和美化从网页复制的 markdown 文件，自动下载图片到本地并更新引用。
 
-## 使用方式
+## 调用方式
 
-**请勿在终端直接运行 organize_markdown，也不要将其当作 shell 命令。请严格按照下述方式触发：**
+**重要**：这是一个在 AI 助手环境中使用的专属指令。请在 **对应的输入框**（如 Gemini CLI 的聊天框或 Claude Code 的命令面板）中输入来触发。
 
-### 触发命令
+此指令不是一个通用的 Shell 命令，**不能** 在您自己的系统终端（如 Bash、Zsh 或 PowerShell）中直接运行。
+
+### 指令格式
 
 ```
 /markdown-organizer @文件路径 [base_url]
-```
-
-**示例**：
-```
-/markdown-organizer @/Users/lei.fu/documents/article.md
-/markdown-organizer @article.md https://example.com/post/123
 ```
 
 ## 工作原理
