@@ -1,5 +1,7 @@
+---
 name: organize_markdown
 description: Markdown 文档组织和美化技能。用于处理从网页复制的 markdown 文件：下载图片到本地 img 文件夹、更新图片引用为本地路径、美化 markdown 格式。支持通过 `/markdown-organizer @文件路径` 命令触发。
+---
 
 > ⚠️ 注意：organize_markdown 不是 shell 命令，不能直接在终端运行。请通过指定的触发命令（如 `/markdown-organizer @文件路径`）或脚本调用，切勿在 shell 里直接输入 organize_markdown，否则会报错！
 ## 学习目标
