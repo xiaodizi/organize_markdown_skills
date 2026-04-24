@@ -1,3 +1,13 @@
+import subprocess
+import sys
+
+# 自动检测并安装 requests 库
+try:
+    import requests
+except ImportError:
+    print("[自动安装] 未检测到 requests 库，正在自动安装...")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
+    import requests
 #!/usr/bin/env python3
 """
 Markdown 文档组织和图片下载工具
