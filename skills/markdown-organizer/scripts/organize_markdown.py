@@ -865,8 +865,38 @@ def organize_markdown(file_path: str | Path, base_url: str = "") -> None:
     else:
         print("  ⚠️ enhance_content.py 未找到，跳过内容增强")
 
+    # Mermaid 图修复流程
+    print("\n🔧 第7步：自动修复所有 Mermaid 知识图谱...")
+    try:
+        # 1. 提取所有 mermaid 代码块为 .mmd 文件
+        extract_script = script_dir / "extract_mermaid_blocks.py"
+        if extract_script.exists():
+            result = subprocess.run(
+                [sys.executable, str(extract_script), str(file_path)],
+                capture_output=True,
+                text=True,
+            )
+            print(result.stdout.strip())
+            # 解析输出，获取所有 .mmd 文件路径
+            import re
+
+            mmd_files = re.findall(r"mermaid_block_\d+\.mmd", result.stdout)
+            mmd_files = [str(file_path.parent / f) for f in mmd_files]
+            # 2. 对每个 .mmd 文件执行节点修复和语法检查
+            fix_script = script_dir / "fix_mermaid_nodes.py"
+            check_script = script_dir / "check_mermaid_syntax.py"
+            for mmd in mmd_files:
+                if fix_script.exists():
+                    subprocess.run([sys.executable, str(fix_script), mmd])
+                if check_script.exists():
+                    subprocess.run([sys.executable, str(check_script), mmd])
+        else:
+            print("  ⚠️ 未找到 extract_mermaid_blocks.py，跳过 Mermaid 修复流程")
+    except Exception as e:
+        print(f"  ⚠️ Mermaid 修复流程异常: {e}")
+
     # 处理 Web Clipper 元数据：确保有一级标题（放在最后，在所有增强内容之后）
-    print("\n📝 第7步：处理 Web Clipper 元数据...")
+    print("\n📝 第8步：处理 Web Clipper 元数据...")
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
     content = ensure_h1_title_after_enhancements(content)
