@@ -26,10 +26,6 @@ graph TD
 
 如需生成知识图谱、流程图等，务必遵循上述格式规范。
 
-
-> ⚠️ 注意：organize_markdown 不是 shell 命令，不能直接在终端运行。请通过指定的触发命令（如 `/markdown-organizer @文件路径`）或脚本调用，切勿在 shell 里直接输入 organize_markdown，否则会报错！
-
-
 ## 脚本说明
 
 Commands 自动执行以下脚本：
@@ -53,14 +49,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/markdown-organizer/scripts/organize_markdow
 ## 调用方式
 
 **重要**：这是一个在 AI 助手环境中使用的专属指令。请在 **对应的输入框**（如 Gemini CLI 的聊天框或 Claude Code 的命令面板）中输入来触发。
-
-此指令不是一个通用的 Shell 命令，**不能** 在您自己的系统终端（如 Bash、Zsh 或 PowerShell）中直接运行。
-
-### 指令格式
-
-```
-/markdown-organizer @文件路径 [base_url]
-```
 
 ## 工作原理
 
